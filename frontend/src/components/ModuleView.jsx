@@ -5,20 +5,32 @@ import { apiEvaluate, apiHint, apiArchiveModule, apiCompleteModule, apiClarify, 
 import { t, getLang } from '../i18n';
 
 function MarkdownRenderer({ content }) {
-  const [MarkdownComponent, setMarkdownComponent] = useState(null);
+  const [renderer, setRenderer] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    import('react-markdown').then(mod => {
-      if (!cancelled) setMarkdownComponent(() => mod.default);
+    Promise.all([
+      import('react-markdown'),
+      import('remark-gfm'),
+      import('remark-math'),
+      import('rehype-katex'),
+    ]).then(([reactMd, remarkGfm, remarkMath, rehypeKatex]) => {
+      if (cancelled) return;
+      const ReactMarkdown = reactMd.default;
+      const gfm = remarkGfm.default;
+      const math = remarkMath.default;
+      const katex = rehypeKatex.default;
+      setRenderer(() => (props) => (
+        <ReactMarkdown remarkPlugins={[gfm, math]} rehypePlugins={[katex]}>
+          {props.children}
+        </ReactMarkdown>
+      ));
     }).catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
-  if (MarkdownComponent) {
-    return <MarkdownComponent>{content || ''}</MarkdownComponent>;
-  }
-
+  const Comp = renderer;
+  if (Comp) return <Comp>{content || ''}</Comp>;
   if (!content) return null;
   let html = content
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')

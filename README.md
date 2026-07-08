@@ -99,3 +99,134 @@ npm run build                          # outputs to frontend/dist/
 ```bash
 python -m pytest tests/ -v
 ```
+
+## Production Deployment
+
+### Option A: Single Server (Raspberry Pi, VPS, Linux)
+
+```bash
+# 1. Clone the repo
+git clone <repo-url> mlpg-v2 && cd mlpg-v2
+
+# 2. Create .env
+cat > .env << EOF
+OPENROUTER_API_KEY=sk-or-...
+DATABASE_URL=postgresql://user:pass@localhost/mlpg  # optional, SQLite fallback
+SECRET_KEY=$(openssl rand -hex 32)
+FLASK_DEBUG=0
+EOF
+
+# 3. Python backend
+pip install -r requirements.txt
+
+# 4. Install Node.js (if needed)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# 5. Build frontend
+cd frontend
+npm install
+npm run build        # outputs to frontend/dist/
+cd ..
+
+# 6. Run with Gunicorn (serves both API + static files)
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
+# Site at http://<server-ip>:5000
+```
+
+### Option B: Nginx + Gunicorn (recommended for production)
+
+```bash
+# Install Nginx
+sudo apt-get install -y nginx
+
+# Create Nginx config (/etc/nginx/sites-available/mlpg)
+sudo tee /etc/nginx/sites-available/mlpg << 'NGINX'
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    # Frontend static files
+    location /logos { alias /path/to/mlpg-v2/logos; }
+    location / {
+        root /path/to/mlpg-v2/frontend/dist;
+        try_files $uri /index.html;
+    }
+
+    # Proxy API to Flask
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+NGINX
+
+sudo ln -s /etc/nginx/sites-available/mlpg /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl restart nginx
+
+# Run Flask with Gunicorn
+gunicorn -w 4 -b 127.0.0.1:5000 app:app --daemon
+
+# Auto-restart with systemd
+sudo tee /etc/systemd/system/mlpg.service << 'SYSTEMD'
+[Unit]
+Description=MLPG Flask Backend
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/path/to/mlpg-v2
+ExecStart=/usr/bin/gunicorn -w 4 -b 127.0.0.1:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD
+
+sudo systemctl daemon-reload
+sudo systemctl enable mlpg
+sudo systemctl start mlpg
+```
+
+### Option C: Docker
+
+```dockerfile
+# Dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY src/ src/
+COPY app.py app.py
+COPY frontend/dist/ frontend/dist/
+EXPOSE 5000
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+```
+
+### Option D: ngrok (quick share)
+
+```bash
+# Run backend
+python app.py &
+# Run frontend dev server
+cd frontend && npm run dev &
+# Expose frontend
+ngrok http 3000
+```
+
+## Gaps vs V1 (Streamlit)
+
+The following V1 features are **intentionally deferred** for V2.1+:
+
+| Feature | Reason |
+|---------|--------|
+| LLM content translation on lang switch | Requires OpenRouter calls; costly per-session |
+| Accuracy donut chart | CSS/SVG rendering; planned for v2.1 |
+| Weekly heatmap | GitHub-style visualization; planned for v2.1 |
+| Topic distribution bars | Chart.js integration; planned for v2.1 |
+| Motivational narrative | NLP-based messages; low priority |
+| Robot mascot in-module reactions | Multiple SVG swaps during evaluation flow |
+| Backfill user stats on startup | DB migration; run manually if needed |
+

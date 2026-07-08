@@ -63,6 +63,16 @@ export default function Dashboard() {
     } catch { return []; }
   })();
 
+  /* XP progression (10 levels, same as V1 gamification.py) */
+  const XP_THRESHOLDS = [0, 50, 120, 220, 350, 520, 740, 1020, 1370, 1800];
+  const currentLevelXp = XP_THRESHOLDS[Math.min((stats.level || 1) - 1, XP_THRESHOLDS.length - 1)];
+  const nextLevelXp = XP_THRESHOLDS[Math.min(stats.level || 1, XP_THRESHOLDS.length - 1)] || 2600;
+  const xpInLevel = (stats.xp || 0) - currentLevelXp;
+  const xpNeeded = nextLevelXp - currentLevelXp;
+  const xpPercent = Math.min(100, Math.round((xpInLevel / xpNeeded) * 100));
+  const totalAttempts = (stats.total_correct || 0) + (stats.total_wrong || 0);
+  const accuracy = totalAttempts > 0 ? Math.round((stats.total_correct || 0) / totalAttempts * 100) : 0;
+
   async function handleAvatar(avatar) {
     try {
       await apiUpdateProfile(avatar, stats.theme_color, stats.featured_badges, user.token);
@@ -107,10 +117,20 @@ export default function Dashboard() {
             <div className="stat-card">
               <div className="value">{stats.xp || 0}</div>
               <div className="label">{t('xp')}</div>
+              <div className="progress-bar" style={{ marginTop: 8, height: 6 }}>
+                <div className="progress-fill" style={{ width: `${xpPercent}%` }} />
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                {xpInLevel}/{xpNeeded} XP → Lv.{Math.min((stats.level || 1) + 1, 10)}
+              </div>
             </div>
             <div className="stat-card">
               <div className="value">{stats.level || 1}</div>
               <div className="label">{t('level')}</div>
+            </div>
+            <div className="stat-card">
+              <div className="value">{accuracy}%</div>
+              <div className="label">Accuracy</div>
             </div>
             <div className="stat-card">
               <div className="value">{stats.current_streak || 0}g</div>
