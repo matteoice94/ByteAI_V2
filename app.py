@@ -31,6 +31,10 @@ from src.database import (
     get_user_stats,
     get_leaderboard,
     update_user_stats,
+    rename_session,
+    delete_session,
+    rename_module,
+    delete_module,
 )
 from src.config import RAG_TOP_K
 from src.i18n import tr
@@ -393,6 +397,76 @@ def api_user_profile():
         updates['featured_badges'] = json.dumps(data['featured_badges'])
     try:
         update_user_stats(payload['user_id'], updates)
+        return jsonify({'success': True}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+# ── Session & Module Management ────────────────────────────
+
+@app.route('/api/session/<int:session_id>/rename', methods=['PUT'])
+def api_rename_session(session_id):
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    data = request.json or {}
+    new_topic = data.get('topic', '').strip()
+    if not new_topic:
+        return jsonify({'success': False, 'error': 'Nuovo topic richiesto.'}), 400
+    try:
+        rename_session(session_id, new_topic)
+        return jsonify({'success': True}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/session/<int:session_id>', methods=['DELETE'])
+def api_delete_session(session_id):
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    try:
+        delete_session(session_id)
+        return jsonify({'success': True}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/module/<int:module_id>/rename', methods=['PUT'])
+def api_rename_module(module_id):
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    data = request.json or {}
+    new_title = data.get('title', '').strip()
+    if not new_title:
+        return jsonify({'success': False, 'error': 'Nuovo titolo richiesto.'}), 400
+    try:
+        rename_module(module_id, new_title)
+        return jsonify({'success': True}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/module/<int:module_id>', methods=['DELETE'])
+def api_delete_module(module_id):
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    try:
+        delete_module(module_id)
+        return jsonify({'success': True}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/module/<int:module_id>/reopen', methods=['POST'])
+def api_reopen_module(module_id):
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    try:
+        update_module_state(module_id, completed=False, archived=False)
         return jsonify({'success': True}), 200
     except Exception as exc:
         return jsonify({'success': False, 'error': str(exc)}), 500

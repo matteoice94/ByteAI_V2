@@ -108,3 +108,40 @@ export async function apiUpdateProfile(avatar, theme_color, featured_badges, tok
     body: JSON.stringify({ avatar, theme_color, featured_badges }),
   });
 }
+
+export async function apiRenameSession(sessionId, topic, token) {
+  return request(`${BASE}/session/${sessionId}/rename`, {
+    method: 'PUT',
+    headers: headers(token),
+    body: JSON.stringify({ topic }),
+  });
+}
+
+export async function apiDeleteSession(sessionId, token) {
+  return request(`${BASE}/session/${sessionId}`, {
+    method: 'DELETE',
+    headers: headers(token),
+  });
+}
+
+export async function apiRenameModule(moduleId, title, token) {
+  return request(`${BASE}/module/${moduleId}/rename`, {
+    method: 'PUT',
+    headers: headers(token),
+    body: JSON.stringify({ title }),
+  });
+}
+
+export async function apiDeleteModule(moduleId, token) {
+  return request(`${BASE}/module/${moduleId}`, {
+    method: 'DELETE',
+    headers: headers(token),
+  });
+}
+
+export async function apiReopenModule(moduleId, token) {
+  return request(`${BASE}/module/${moduleId}/reopen`, {
+    method: 'POST',
+    headers: headers(token),
+  });
+}

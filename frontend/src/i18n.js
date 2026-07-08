@@ -51,6 +51,19 @@ const translations = {
   doubtPlaceholder: { it: 'Descrivi cosa non ti è chiaro...', en: 'Describe what is unclear...' },
   modulesArchived: { it: 'Moduli Archiviati', en: 'Archived Modules' },
   noArchived: { it: 'Nessun modulo archiviato.', en: 'No archived modules.' },
+  active: { it: 'In corso', en: 'Active' },
+  reopen: { it: 'Riapri', en: 'Reopen' },
+  confirmDelete: { it: 'Sei sicuro di voler eliminare?', en: 'Are you sure you want to delete?' },
+  attempt: { it: 'Tentativo', en: 'Attempt' },
+  clarification: { it: 'Chiarimento', en: 'Clarification' },
+  example: { it: 'Esempio pratico', en: 'Practical example' },
+  stepGuide: { it: 'Guida passo-passo', en: 'Step-by-step guide' },
+  maxStreak: { it: 'Max Streak', en: 'Max Streak' },
+  pathsCompleted: { it: 'Percorsi', en: 'Paths' },
+  totalModules: { it: 'Moduli totali', en: 'Total modules' },
+  profile: { it: 'Profilo', en: 'Profile' },
+  themeColor: { it: 'Colore tema', en: 'Theme color' },
+  generateSummary: { it: 'Genera Riepilogo', en: 'Generate Summary' },
 };
 
 export function getLang() {
