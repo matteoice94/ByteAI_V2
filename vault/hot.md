@@ -1,25 +1,30 @@
 ---
 type: meta
 title: "Hot Cache"
-updated: 2026-07-08T17:30:00
+updated: 2026-07-09T18:00:00
 ---
 # Recent Context
 
 ## Last Updated
-2026-07-08 — Full project analysis: ingested 4 source files + 7 concept pages
+2026-07-09 — Ingested PROMPT_LOG.md and INCIDENTS.md from V1 folder
 
 ## Key Recent Facts
-- MLPG uses Pydantic with `extra=forbid` as the validation contract between LLM JSON and app logic
-- Database supports PostgreSQL + SQLite via unified _DB wrapper; placeholder translation (?→%s) for PG
-- Password auth migrated from fixed-salt SHA-256 → bcrypt with migrate-on-login pattern
-- 20 badges in 5 color-coded categories; Collector meta-badge rewards badge diversity
-- All UI text centralized in 260-key flat IT/EN dict; CLI, Streamlit, Flask all use same tr()
-- Streak system: consecutive-day tracking + phoenix mechanic (badge on return after 7+ days)
+- MLPG prompt engineering evolved through 9 phases: JSON-only → recovery flow → i18n → 3-tier evaluation
+- Recovery flow distinguishes "parziale" (partial understanding → hint + retry) from "sbagliata" (wrong → archive)
+- Sanity check was removed from pipeline — LLM now evaluates both relevance and correctness
+- Incident log documents 40+ bugs across API, parsing, UI state, security, and DB domains
+- Dual-backend (PG+SQLite) caused recurring SQL dialect compatibility bugs
+- Streamlit session_state was the most frequent source of UI bugs (9 incidents)
+- Security hardening: SHA-256→bcrypt, Flask debug off, JWT secret stabilized
+- `valuta_con_pipeline()` consolidated 280 lines of duplicated eval logic across 3 interfaces
 
 ## Recent Changes
-- Created: vault/sources/models-py-2026-07-08.md, vault/sources/database-py-2026-07-08.md, vault/sources/gamification-py-2026-07-08.md, vault/sources/i18n-py-2026-07-08.md
-- Created: vault/concepts/Pydantic-Validation-Contract.md, vault/concepts/Dual-Backend-Abstraction.md, vault/concepts/Password-Migration-Pattern.md, vault/concepts/XP-Progression-Curve.md, vault/concepts/Badge-System-Design.md, vault/concepts/Streak-and-Phoenix-Mechanic.md, vault/concepts/Centralized-Translation-Pattern.md
+- Created: vault/sources/prompt-log-2026-07-09.md, vault/sources/incident-log-2026-07-09.md
+- Created: vault/concepts/Prompt-Engineering-Evolution.md, vault/concepts/Recovery-Flow-Pattern.md, vault/concepts/Three-Tier-Evaluation-Pipeline.md
+- Created: vault/concepts/Database-Backend-Compatibility.md, vault/concepts/Security-Hardening-Journey.md, vault/concepts/Streamlit-State-Management.md
+- Updated: vault/entities/OpenRouter.md (added Gemini→OpenRouter migration history)
 
 ## Active Threads
-- Full vault populated with 5 sources, 1 entity, 8 concepts — 14 pages total
-- Vault captures all major architectural patterns in MLPG codebase
+- Vault now has 7 sources, 1 entity, 14 concepts — 22 pages total
+- Full development chronicle captured: prompt evolution + bug register spanning May-July 2026
+- Cross-references established between prompt log ↔ incident log ↔ architectural concepts

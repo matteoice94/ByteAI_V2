@@ -1,5 +1,14 @@
 # Operation Log
 
+## 2026-07-09
+**Operation**: ingest
+**Sources**: prompt-log-2026-07-09, incident-log-2026-07-09
+**Pages created**: vault/sources/prompt-log-2026-07-09.md, vault/sources/incident-log-2026-07-09.md, vault/concepts/Prompt-Engineering-Evolution.md, vault/concepts/Recovery-Flow-Pattern.md, vault/concepts/Three-Tier-Evaluation-Pipeline.md, vault/concepts/Database-Backend-Compatibility.md, vault/concepts/Security-Hardening-Journey.md, vault/concepts/Streamlit-State-Management.md
+**Pages updated**: vault/entities/OpenRouter.md, vault/index.md, vault/sources/_index.md, vault/concepts/_index.md, vault/entities/_index.md, vault/hot.md, vault/overview.md
+**Key insight**: Full development chronicle captured: 9-phase prompt evolution from JSON-only to 3-tier evaluation with recovery flow; 40+ incident log spanning API, parsing, UI, security, and DB domains. 6 new concepts extracted (prompt evolution, recovery flow, eval pipeline, DB compatibility, security hardening, Streamlit state management).
+
+---
+
 ## 2026-07-08
 **Operation**: ingest
 **Source**: i18n-py-2026-07-08

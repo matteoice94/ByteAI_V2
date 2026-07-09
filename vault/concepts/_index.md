@@ -8,3 +8,9 @@
 - [[Badge-System-Design|Badge System Design]] — 20 badges, 5 categories, SVG rendering
 - [[Streak-and-Phoenix-Mechanic|Streak and Phoenix Mechanic]] — Daily streak + absence recovery
 - [[Centralized-Translation-Pattern|Centralized Translation Pattern]] — Flat IT/EN dict for 3 interfaces
+- [[Prompt-Engineering-Evolution|Prompt Engineering Evolution]] — 9-phase prompt refinement from JSON-only to 3-tier
+- [[Recovery-Flow-Pattern|Recovery Flow Pattern]] — 3-tier error recovery distinguishing parziale vs sbagliata
+- [[Three-Tier-Evaluation-Pipeline|Three-Tier Evaluation Pipeline]] — Heuristic → LLM eval unified pipeline
+- [[Database-Backend-Compatibility|Database Backend Compatibility]] — PG vs SQLite dialect differences and fixes
+- [[Security-Hardening-Journey|Security Hardening Journey]] — 3 security fixes: passwords, debug, JWT
+- [[Streamlit-State-Management|Streamlit State Management]] — session_state patterns from 9 UI bugs

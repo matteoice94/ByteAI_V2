@@ -1,8 +1,8 @@
 ---
 type: meta
 title: "Entities Index"
-updated: 2026-07-08T16:00:00
+updated: 2026-07-09T18:00:00
 ---
 # Entities Index
 
-_No entities yet._
+- [[OpenRouter]] — service, LLM API provider for MLPG (updated with migration history)

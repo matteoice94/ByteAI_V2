@@ -28,5 +28,17 @@
     "ingested_at": "2026-07-08T17:30:00",
     "pages_created": ["vault/sources/i18n-py-2026-07-08.md", "vault/concepts/Centralized-Translation-Pattern.md"],
     "pages_updated": ["vault/index.md", "vault/hot.md", "vault/log.md", "vault/overview.md"]
+  },
+  "prompt-log-2026-07-09": {
+    "hash": "896c70a890dd",
+    "ingested_at": "2026-07-09T18:00:00",
+    "pages_created": ["vault/sources/prompt-log-2026-07-09.md", "vault/concepts/Prompt-Engineering-Evolution.md", "vault/concepts/Recovery-Flow-Pattern.md", "vault/concepts/Three-Tier-Evaluation-Pipeline.md"],
+    "pages_updated": ["vault/index.md", "vault/sources/_index.md", "vault/concepts/_index.md", "vault/hot.md", "vault/log.md", "vault/overview.md"]
+  },
+  "incident-log-2026-07-09": {
+    "hash": "3446334e3672",
+    "ingested_at": "2026-07-09T18:00:00",
+    "pages_created": ["vault/sources/incident-log-2026-07-09.md", "vault/concepts/Database-Backend-Compatibility.md", "vault/concepts/Security-Hardening-Journey.md", "vault/concepts/Streamlit-State-Management.md"],
+    "pages_updated": ["vault/entities/OpenRouter.md", "vault/index.md", "vault/sources/_index.md", "vault/concepts/_index.md", "vault/entities/_index.md", "vault/hot.md", "vault/log.md", "vault/overview.md"]
   }
 }
