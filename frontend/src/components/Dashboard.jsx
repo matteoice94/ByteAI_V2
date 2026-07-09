@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiUserStats, apiLeaderboard, apiUpdateProfile } from '../api';
-import { t } from '../i18n';
+import { t, getLang } from '../i18n';
 
 const ALL_BADGES = [
   { id: 'prima_risposta', name: 'Prima Risposta', emoji: '🎯', cat: 'achievement' },
@@ -32,34 +32,46 @@ const THEMES = ['#3B82F6', '#22C55E', '#F59E0B', '#EF4444', '#A855F7', '#EC4899'
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [featuredB, setFeaturedB] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const lang = getLang();
 
   useEffect(() => {
     Promise.all([
-      apiUserStats(user.token).catch(() => null),
-      apiLeaderboard(user.token).catch(() => []),
+      apiUserStats(user.token).catch(e => { setError(e.message); return null; }),
+      apiLeaderboard(user.token).catch(e => { console.error(e); return []; }),
     ]).then(([s, lb]) => {
       setStats(s?.data || null);
+      if (s?.data) {
+        try {
+          let fb = s.data.featured_badges;
+          if (typeof fb === 'string') { fb = JSON.parse(fb); if (typeof fb === 'string') fb = JSON.parse(fb); }
+          setFeaturedB(Array.isArray(fb) ? fb : []);
+        } catch { setFeaturedB([]); }
+      }
       setLeaderboard(lb?.data || []);
     }).finally(() => setLoading(false));
   }, [user.token]);
 
   if (loading) return <div className="card"><p>{t('loading')}</p></div>;
-  if (!stats) return <div className="card"><p>{t('error')}</p></div>;
+  if (!stats) return <div className="card"><p>{t('error')}{error ? `: ${error}` : ''}</p></div>;
 
   const earnedBadges = (() => {
     try {
-      if (typeof stats.badges === 'string') return JSON.parse(stats.badges);
-      return stats.badges || [];
+      let b = stats.badges;
+      if (typeof b === 'string') { b = JSON.parse(b); if (typeof b === 'string') b = JSON.parse(b); }
+      return Array.isArray(b) ? b : [];
     } catch { return []; }
   })();
 
   const featuredBadges = (() => {
     try {
-      if (typeof stats.featured_badges === 'string') return JSON.parse(stats.featured_badges);
-      return stats.featured_badges || [];
+      let b = stats.featured_badges;
+      if (typeof b === 'string') { b = JSON.parse(b); if (typeof b === 'string') b = JSON.parse(b); }
+      return Array.isArray(b) ? b : [];
     } catch { return []; }
   })();
 
@@ -75,37 +87,37 @@ export default function Dashboard() {
 
   async function handleAvatar(avatar) {
     try {
-      await apiUpdateProfile(avatar, stats.theme_color, stats.featured_badges, user.token);
+      await apiUpdateProfile(avatar, stats.theme_color, JSON.stringify(featuredB), user.token);
       setStats(s => ({ ...s, avatar }));
     } catch {}
   }
 
   async function handleTheme(color) {
     try {
-      await apiUpdateProfile(stats.avatar, color, stats.featured_badges, user.token);
+      await apiUpdateProfile(stats.avatar, color, JSON.stringify(featuredB), user.token);
       setStats(s => ({ ...s, theme_color: color }));
     } catch {}
   }
 
   async function toggleFeaturedBadge(badgeId) {
-    const newFeatured = featuredBadges.includes(badgeId)
-      ? featuredBadges.filter(b => b !== badgeId)
-      : [...featuredBadges, badgeId].slice(0, 3);
+    const newFeatured = featuredB.includes(badgeId)
+      ? featuredB.filter(b => b !== badgeId)
+      : [...featuredB, badgeId].slice(0, 3);
+    setFeaturedB(newFeatured);
     try {
       await apiUpdateProfile(stats.avatar, stats.theme_color, JSON.stringify(newFeatured), user.token);
-      setStats(s => ({ ...s, featured_badges: JSON.stringify(newFeatured) }));
     } catch {}
   }
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
-        <div className="card" style={{ flex: '0 0 240px', textAlign: 'center' }}>
+        <div className="card" style={{ flex: '0 0 240px', textAlign: 'center', borderColor: stats.theme_color || 'var(--border)', borderWidth: 2 }}>
           <div style={{ fontSize: '4rem', marginBottom: 8 }}>{stats.avatar || '🤖'}</div>
           <h3>{user.username}</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Lv. {stats.level || 1} — {stats.xp || 0} XP</p>
           <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 8 }}>
-            {featuredBadges.map((bid, i) => {
+            {featuredB.map((bid, i) => {
               const badge = ALL_BADGES.find(b => b.id === bid);
               return badge ? <span key={i} style={{ fontSize: '1.5rem' }} title={badge.name}>{badge.emoji}</span> : null;
             })}
@@ -118,7 +130,7 @@ export default function Dashboard() {
               <div className="value">{stats.xp || 0}</div>
               <div className="label">{t('xp')}</div>
               <div className="progress-bar" style={{ marginTop: 8, height: 6 }}>
-                <div className="progress-fill" style={{ width: `${xpPercent}%` }} />
+                <div className="progress-fill" style={{ width: `${xpPercent}%`, background: stats.theme_color || 'var(--primary)' }} />
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 {xpInLevel}/{xpNeeded} XP → Lv.{Math.min((stats.level || 1) + 1, 10)}
@@ -189,10 +201,10 @@ export default function Dashboard() {
         <div className="badges-grid">
           {ALL_BADGES.map(b => {
             const earned = earnedBadges.some(eb => (typeof eb === 'string' ? eb : eb.id || eb) === b.id);
-            const featured = featuredBadges.includes(b.id);
+            const featured = featuredB.includes(b.id);
             return (
               <div key={b.id} className={`badge-item ${earned ? '' : 'locked'}`}
-                   style={{ cursor: earned ? 'pointer' : 'default', border: featured ? '2px solid var(--primary)' : undefined }}
+                   style={{ cursor: earned ? 'pointer' : 'default', border: featured ? `2px solid ${stats.theme_color || 'var(--primary)'}` : undefined, background: featured ? `${stats.theme_color || 'var(--primary)'}20` : undefined }}
                    onClick={() => earned && toggleFeaturedBadge(b.id)}>
                 <div style={{ fontSize: '2rem' }}>{earned ? b.emoji : '🔒'}</div>
                 <div className="badge-name">
@@ -232,27 +244,93 @@ export default function Dashboard() {
         <div className="modal-overlay" onClick={() => setSelectedProfile(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Profilo pubblico</h3>
+              <h3>{t('publicProfile')}</h3>
               <button className="modal-close" onClick={() => setSelectedProfile(null)}>✕</button>
             </div>
             {(() => {
               const entry = leaderboard.find(l => l.user_id === selectedProfile);
               if (!entry) return <p>Utente non trovato.</p>;
               const fb = (() => {
-                try { return typeof entry.featured_badges === 'string' ? JSON.parse(entry.featured_badges) : (entry.featured_badges || []); }
-                catch { return []; }
+                try {
+                  let v = entry.featured_badges;
+                  if (typeof v === 'string') { v = JSON.parse(v); if (typeof v === 'string') v = JSON.parse(v); }
+                  return Array.isArray(v) ? v : [];
+                } catch { return []; }
               })();
+              const earned = (() => {
+                try {
+                  let v = entry.badges;
+                  if (typeof v === 'string') v = JSON.parse(v);
+                  return Array.isArray(v) ? v : [];
+                } catch { return []; }
+              })();
+              const currentLevelXp = XP_THRESHOLDS[Math.min((entry.level || 1) - 1, XP_THRESHOLDS.length - 1)];
+              const nextLevelXp = XP_THRESHOLDS[Math.min(entry.level || 1, XP_THRESHOLDS.length - 1)] || 2600;
+              const xpIn = (entry.xp || 0) - currentLevelXp;
+              const xpNeed = nextLevelXp - currentLevelXp;
+              const pct = Math.min(100, Math.round((xpIn / xpNeed) * 100));
               return (
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '4rem' }}>{entry.avatar || '🤖'}</div>
-                  <h3>{entry.username}</h3>
-                  <p>Lv.{entry.level} — {entry.xp} XP — Streak: {entry.current_streak}g</p>
-                  <p>{entry.total_modules_completed} moduli completati</p>
-                  <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 12 }}>
-                    {fb.map((bid, i) => {
-                      const badge = ALL_BADGES.find(b => b.id === bid);
-                      return badge ? <span key={i} style={{ fontSize: '2rem' }} title={badge.name}>{badge.emoji}</span> : null;
-                    })}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* TOP ROW: Identity + Stats */}
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    {/* Identity Block */}
+                    <div style={{ flex: '0 0 200px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface2)', borderRadius: 14, padding: 20, border: `2px solid ${entry.theme_color || 'var(--border)'}` }}>
+                      <div style={{ fontSize: '3.5rem', marginBottom: 4 }}>{entry.avatar || '🤖'}</div>
+                      <h3 style={{ marginBottom: 8, fontSize: '1.2rem' }}>{entry.username}</h3>
+                      <div style={{ width: '100%', marginTop: 4 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 4 }}>
+                          <span>Lv.{entry.level || 1}</span>
+                          <span>{entry.xp || 0} / {nextLevelXp} XP</span>
+                        </div>
+                        <div className="progress-bar" style={{ height: 6, background: 'rgba(255,255,255,0.06)' }}>
+                          <div className="progress-fill" style={{ width: `${pct}%`, background: entry.theme_color || '#1D9E75' }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, minWidth: 180 }}>
+                      <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16, border: `1px solid ${entry.theme_color || 'rgba(255,255,255,0.05)'}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: '1.8rem' }}>🔥</span>
+                        <span style={{ fontSize: '1.4rem', fontWeight: 700, color: '#F59E0B' }}>{entry.current_streak || 0}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('streak')}</span>
+                      </div>
+                      <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16, border: `1px solid ${entry.theme_color || 'rgba(255,255,255,0.05)'}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: '1.8rem' }}>📦</span>
+                        <span style={{ fontSize: '1.4rem', fontWeight: 700, color: '#3B82F6' }}>{entry.total_modules_completed || 0}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('totalModules')}</span>
+                      </div>
+                      <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16, border: `1px solid ${entry.theme_color || 'rgba(255,255,255,0.05)'}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: '1.8rem' }}>🗺️</span>
+                        <span style={{ fontSize: '1.4rem', fontWeight: 700, color: '#A855F7' }}>{entry.total_paths_completed || 0}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('pathsCompleted')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BOTTOM ROW: Badge Showcase */}
+                  <div style={{ background: 'var(--surface2)', borderRadius: 14, padding: 16 }}>
+                    <h4 style={{ marginBottom: 12, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                      {t('badges')}
+                    </h4>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {fb.slice(0, 3).map((bid, i) => {
+                        const badge = ALL_BADGES.find(b => b.id === bid);
+                        return (
+                          <div key={i} style={{
+                            width: 56, height: 56, borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '1.4rem', boxShadow: '0 0 12px rgba(255,215,0,0.3)',
+                          }} title={badge?.name || bid}>
+                            {badge ? badge.emoji : '🥇'}
+                          </div>
+                        );
+                      })}
+                      {fb.length === 0 && (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Nessun badge in evidenza</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

@@ -16,6 +16,7 @@ async function request(url, options = {}) {
 export async function apiRegister(username, password) {
   return request(`${BASE}/register`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ username, password }),
   });
 }
@@ -23,6 +24,7 @@ export async function apiRegister(username, password) {
 export async function apiLogin(username, password) {
   return request(`${BASE}/login`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ username, password }),
   });
 }
@@ -46,6 +48,7 @@ export async function apiEvaluate(esercizio, soluzione, livello, module_db_id, t
 export async function apiHint(esercizio, soluzione, livello, tentativo, lang) {
   return request(`${BASE}/hint`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ esercizio, soluzione, livello, tentativo, lang }),
   });
 }
@@ -53,6 +56,7 @@ export async function apiHint(esercizio, soluzione, livello, tentativo, lang) {
 export async function apiClarify(argomento, spiegazione, dubbio, livello, lang) {
   return request(`${BASE}/clarify`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ argomento, spiegazione, dubbio, livello, lang }),
   });
 }
@@ -60,6 +64,7 @@ export async function apiClarify(argomento, spiegazione, dubbio, livello, lang) 
 export async function apiFinalSummary(solutions, diary, livello, session_id, lang) {
   return request(`${BASE}/final-summary`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ solutions, diary, livello, session_id, lang }),
   });
 }
@@ -67,6 +72,7 @@ export async function apiFinalSummary(solutions, diary, livello, session_id, lan
 export async function apiArchiveModule(module_db_id, lang) {
   return request(`${BASE}/archive-module`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ module_db_id, lang }),
   });
 }
@@ -74,6 +80,7 @@ export async function apiArchiveModule(module_db_id, lang) {
 export async function apiCompleteModule(module_db_id, lang) {
   return request(`${BASE}/complete-module`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ module_db_id, lang }),
   });
 }
@@ -85,6 +92,7 @@ export async function apiHistory(token) {
 export async function apiSessionDetail(session_id, lang) {
   return request(`${BASE}/session-detail`, {
     method: 'POST',
+    headers: headers(),
     body: JSON.stringify({ session_id, lang }),
   });
 }

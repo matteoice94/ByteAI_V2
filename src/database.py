@@ -445,7 +445,8 @@ def get_leaderboard(limit: int = 10) -> list[dict]:
     rows = conn.execute(
         _adapt(
             "SELECT u.id as user_id, u.username, s.xp, s.level, s.current_streak, "
-            "s.total_modules_completed, s.avatar, s.theme_color, s.featured_badges "
+            "s.total_modules_completed, s.total_paths_completed, s.badges, "
+            "s.avatar, s.theme_color, s.featured_badges "
             "FROM user_stats s JOIN users u ON s.user_id = u.id "
             "ORDER BY s.xp DESC LIMIT ?"
         ),
@@ -814,6 +815,13 @@ def update_module_state(module_db_id: int, completed: bool = False, archived: bo
         _adapt("UPDATE modules SET completed = ?, archived = ? WHERE id = ?"),
         (1 if completed else 0, 1 if archived else 0, module_db_id),
     )
+    conn.commit()
+    conn.close()
+
+
+def clear_module_attempts(module_db_id: int):
+    conn = _get_conn()
+    conn.execute(_adapt("DELETE FROM attempts WHERE module_id = ?"), (module_db_id,))
     conn.commit()
     conn.close()
 

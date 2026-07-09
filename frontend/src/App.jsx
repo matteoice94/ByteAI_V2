@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { Component } from 'react';
 import Login from './components/Login';
 import PathGenerator from './components/PathGenerator';
 import ModuleView from './components/ModuleView';
@@ -9,6 +10,19 @@ import Dashboard from './components/Dashboard';
 import NavBar from './components/NavBar';
 import { getLang, setLang, t } from './i18n';
 import { useState } from 'react';
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return <div className="card" style={{margin:40,color:'var(--danger)'}}>
+        <h2>Crash</h2><pre>{this.state.error.message}</pre>
+      </div>;
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -28,9 +42,9 @@ export default function App() {
         <Routes>
           <Route path="/" element={<PathGenerator />} />
           <Route path="/session/:sessionId" element={<ModuleView />} />
-          <Route path="/summary/:sessionId" element={<FinalSummary />} />
+          <Route path="/summary/:sessionId" element={<ErrorBoundary><FinalSummary /></ErrorBoundary>} />
           <Route path="/history" element={<History />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

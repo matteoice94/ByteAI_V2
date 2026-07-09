@@ -23,7 +23,10 @@ export default function FinalSummary() {
         risposta: m.feedback?.soluzione || '',
         valutazione: m.feedback?.esito || m.status || 'sbagliata',
       }));
-      const res = await apiFinalSummary(solutions, [], sessionData?.percorso_studio?.livello || 'base', sessionId, lang);
+      const diary = (modules || [])
+        .filter(m => m.status === 'approfondire')
+        .map(m => `${m.titolo_modulo}: ${m.cosaManca || 'da approfondire'}`);
+      const res = await apiFinalSummary(solutions, diary, sessionData?.percorso_studio?.livello || 'base', sessionId, lang);
       setSummary(res.data);
     } catch (err) {
       setError(err.message);
@@ -33,7 +36,7 @@ export default function FinalSummary() {
   }
 
   if (!modules) {
-    return <div className="card"><p>{t('error')}: nessun dato sessione.</p></div>;
+    return <div className="card"><p>{t('error')}: {t('noSessionData')}</p></div>;
   }
 
   const completed = modules.filter(m => m.status === 'completed').length;
@@ -89,12 +92,10 @@ export default function FinalSummary() {
               </div>
             )}
 
-            {summary.diario_di_bordo?.length > 0 && (
+            {summary.diario_di_bordo && (
               <div className="exercise-box" style={{ marginBottom: 16 }}>
                 <h3>📖 {t('diary')}</h3>
-                {summary.diario_di_bordo.map((e, i) => (
-                  <p key={i} style={{ marginBottom: 6, fontSize: '0.9rem', color: 'var(--text-muted)' }}>{e}</p>
-                ))}
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>{summary.diario_di_bordo}</p>
               </div>
             )}
 

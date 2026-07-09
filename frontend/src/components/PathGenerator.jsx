@@ -49,7 +49,7 @@ export default function PathGenerator() {
         </div>
         <div className="form-group">
           <label>{t('yourName')}</label>
-          <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Studente" />
+          <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder={t('namePlaceholder')} />
         </div>
         <button className="btn btn-primary" disabled={loading}>
           {loading ? t('generating') : t('generate')}

@@ -21,11 +21,11 @@ export default function Login() {
     e.preventDefault();
     setError('');
     if (password.length < 4) {
-      setError(lang === 'it' ? 'Password troppo corta (min 4 caratteri).' : 'Password too short (min 4 characters).');
+      setError(t('passwordTooShort'));
       return;
     }
     if (isRegister && password !== passwordConfirm) {
-      setError(lang === 'it' ? 'Le password non coincidono.' : 'Passwords do not match.');
+      setError(t('passwordMismatch'));
       return;
     }
     setLoading(true);
@@ -42,7 +42,7 @@ export default function Login() {
   return (
     <div className="login-container">
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <img src="/logos/robot_8bit_neutral_nomouth.svg" alt="Robot" style={{ width: 80, height: 80, imageRendering: 'pixelated' }} />
+        <img src="/robot_8bit_neutral_nomouth.svg" alt="Robot" style={{ width: 80, height: 80, imageRendering: 'pixelated' }} />
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
           <button className={`lang-btn ${lang === 'it' ? 'active' : ''}`} onClick={() => switchLang('it')}>🇮🇹 IT</button>
           <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => switchLang('en')}>🇬🇧 EN</button>
@@ -63,7 +63,7 @@ export default function Login() {
           </div>
           {isRegister && (
             <div className="form-group">
-              <label>{lang === 'it' ? 'Conferma password' : 'Confirm password'}</label>
+              <label>{t('confirmPassword')}</label>
               <input className="form-input" type="password" value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} required />
             </div>
           )}
@@ -72,7 +72,7 @@ export default function Login() {
           </button>
         </form>
         <div className="login-toggle">
-          {isRegister ? 'Hai già un account?' : 'Nuovo utente?'}{' '}
+          {isRegister ? t('alreadyHaveAccount') : t('newUser')}{' '}
           <button onClick={() => setIsRegister(!isRegister)}>
             {isRegister ? t('login') : t('register')}
           </button>

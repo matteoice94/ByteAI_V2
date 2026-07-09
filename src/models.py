@@ -22,6 +22,7 @@ class FeedbackValutazione(BaseModel):
     punti_migliorabili: Optional[List[str]] = None
     errors_comprensione: Optional[List[str]] = None
     esito: Optional[str] = None  # "corretta", "parziale", "sbagliata"
+    cosa_manca: Optional[str] = None  # per "parziale": spiega cosa mancava
 
 class RiepilogoFinale(BaseModel):
     punti_di_forza: List[str]

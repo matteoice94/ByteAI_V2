@@ -192,3 +192,34 @@ Registro delle modifiche e dei test effettuati sui prompt.
 - **Obiettivo:** Creare un logo con robot 8-bit e testo "MLPG" dentro una cartuccia stile SNES con effetto glow/neon.
 - **Prompt Claude:** Logo SVG con cartuccia videogioco, robot pixel art scalato dall'esistente, testo MLPG in pixel font oro, doppio alone glow dietro robot e sotto testo, circuiti decorativi oro, palette blu/indaco/oro.
 - **Risultato:** SVG salvato in `logos/mlpg_logo.svg` — cartuccia con ombra, glow radiale, testo con 2 layer di ombra glow. Robot scalato 0.55x centrato nella cartuccia.
+
+---
+
+## [9 Luglio 2026] - V2 Flask+React, Recovery Flow 3-tier, Dashboard Bento
+
+### V2 Migration: Flask + React/Vite
+- **Azione:** Creata architettura frontend React+Vite separata dal backend Flask, mantenendo `src/` invariato.
+- **Dettagli:** 7 componenti React (Login, PathGenerator, ModuleView, FinalSummary, History, Dashboard, NavBar). API proxy via Vite. Auth JWT con HMAC.
+- **Obiettivo:** Sostituire Streamlit con frontend moderno per performance e distribuzione.
+- **Risultato:** App deployabile via Gunicorn+Nginx. Zero dipendenze Streamlit nel frontend.
+
+### Recovery Flow 3-tier: parziale → approfondire
+- **Azione:** Aggiunto campo `cosa_manca` a `FeedbackValutazione` e al prompt di valutazione (IT+EN).
+- **Obiettivo:** Quando l'LLM valuta "parziale", spiega specificamente cosa mancava.
+- **Flusso:** 1° parziale → hint + riprova. 2° parziale → "Da Approfondire" (archiviato con nota, va nel riepilogo finale). 2° sbagliata → "Archiviato" (da riprendere). Corretta → completato.
+- **Risultato:** Recovery flow distintivo del tutor: distingue comprensione parziale da errore grave.
+
+### Sanity check rimosso dalla pipeline
+- **Azione:** Rimosso blocco sanity check da `valuta_con_pipeline()`. Il LLM ora valuta sempre, anche risposte off-topic.
+- **Obiettivo:** Evitare che risposte pertinenti ma fuori focus (es. CREATE TABLE invece di SELECT) vengano bloccate prima della valutazione.
+- **Risultato:** L'LLM marca come "parziale" con `cosa_manca` invece di ricevere un blocco generico.
+
+### Heuristic filter: riconoscimento SQL
+- **Azione:** Aggiunti indicatori SQL (`CREATE`, `SELECT`, `TABLE`, `FROM`, `WHERE`, `JOIN`) alla lista `_code_indicators`.
+- **Obiettivo:** Evitare che il keyword overlap check bocci risposte SQL legittime ma con poche keyword in comune con l'esercizio.
+- **Risultato:** Risposte SQL passano il filtro euristico e arrivano alla valutazione LLM.
+
+### Dashboard Bento Grid + Live Badge Toggle
+- **Azione:** Profilo pubblico ridisegnato in layout Bento Grid con blocco identità, griglia statistiche 2x2 e showcase badge.
+- **Dettagli:** Badge toggliano live senza refresh (state React separato `featuredB`). Tema colore applicato a bordi card, barre XP, badge featured.
+- **Risultato:** UI reattiva con tema personalizzato visibile immediatamente.

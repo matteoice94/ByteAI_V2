@@ -20,6 +20,7 @@ from src.database import (
     save_session,
     save_attempt,
     update_module_state,
+    clear_module_attempts,
     save_riepilogo,
     find_similar_modules,
     get_all_sessions,
@@ -40,7 +41,15 @@ from src.config import RAG_TOP_K
 from src.i18n import tr
 
 app = Flask(__name__)
-_secret = os.environ.get("SECRET_KEY", "mlpg-dev-secret-" + str(hash(time.time())))
+_secret = os.environ.get("SECRET_KEY", "mlpg-v2-dev-secret-key-2026")
+_XP_THRESHOLDS = [0, 50, 120, 220, 350, 520, 740, 1020, 1370, 1800]
+
+def _level_from_xp(xp: int) -> int:
+    level = 1
+    for t in _XP_THRESHOLDS:
+        if (xp or 0) >= t:
+            level = _XP_THRESHOLDS.index(t) + 1
+    return level
 
 def _make_token(user_id: int, username: str) -> str:
     payload = json.dumps({"user_id": user_id, "username": username, "exp": time.time() + 86400 * 7})
@@ -73,7 +82,7 @@ def _require_auth():
 
 # ── Rate Limiter ──────────────────────────────────────────
 RATE_LIMIT_WINDOW = 60        # secondi
-RATE_LIMIT_MAX_REQUESTS = 30  # richieste per finestra per IP
+RATE_LIMIT_MAX_REQUESTS = 200  # development
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
 
 
@@ -173,6 +182,7 @@ def api_evaluate():
             'esito': esito,
             'commento_costruttivo': feedback.commento_costruttivo,
             'suggerimento_miglioramento': feedback.suggerimento_miglioramento,
+            'cosa_manca': getattr(feedback, 'cosa_manca', None),
             'hint': pipeline.get('hint'),
         }), 200
     except Exception as exc:
@@ -290,6 +300,15 @@ def api_final_summary():
         riepilogo = genera_riepilogo_finale(solutions, diary, livello, lang)
         if session_id:
             save_riepilogo(int(session_id), riepilogo.model_dump_json())
+        # Award path completion XP
+        payload = _require_auth()
+        if payload:
+            stats = get_user_stats(payload['user_id'])
+            xp = (stats.get('xp', 0) or 0) + 25
+            level = _level_from_xp(xp)
+            paths = (stats.get('total_paths_completed', 0) or 0) + 1
+            sessions = (stats.get('total_sessions', 0) or 0) + 1
+            update_user_stats(payload['user_id'], {'xp': xp, 'level': level, 'total_paths_completed': paths, 'total_sessions': sessions})
         return jsonify({'success': True, 'data': riepilogo.model_dump()}), 200
     except Exception as exc:
         return jsonify({'success': False, 'error': str(exc)}), 500
@@ -466,6 +485,7 @@ def api_reopen_module(module_id):
     if not payload:
         return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
     try:
+        clear_module_attempts(module_id)
         update_module_state(module_id, completed=False, archived=False)
         return jsonify({'success': True}), 200
     except Exception as exc:

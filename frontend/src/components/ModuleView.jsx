@@ -57,11 +57,15 @@ export default function ModuleView() {
     if (!sessionData?.percorso_studio?.moduli) return [];
     return sessionData.percorso_studio.moduli.map(m => ({
       ...m,
-      status: 'pending',
-      attempts: 0,
-      feedback: null,
-      hint: null,
-      archived: false,
+      status: m.status || 'pending',
+      attempts: m.attempts || 0,
+      partialCount: m.partialCount || 0,
+      wrongCount: m.wrongCount || 0,
+      feedback: m.feedback || null,
+      hint: m.hint || null,
+      archived: m.archived || false,
+      cosaManca: m.cosaManca || null,
+      submittedSolution: m.submittedSolution || null,
     }));
   });
 
@@ -97,7 +101,7 @@ export default function ModuleView() {
 
   const mod = modules[selectedIdx];
   if (!mod || !sessionData) {
-    return <div className="card"><p>{t('error')}: sessione non trovata.</p></div>;
+    return <div className="card"><p>{t('error')}: {t('sessionNotFound')}</p></div>;
   }
 
   const allDone = modules.every(m => m.status === 'completed' || m.archived);
@@ -146,22 +150,35 @@ export default function ModuleView() {
       const res = await apiEvaluate(mod.esercizio_pratico, solution, sessionData.percorso_studio.livello, dbId, mod.attempts, lang, user.token);
       const newAttempts = mod.attempts + 1;
       const isCorrect = res.esito === 'corretta';
-      const shouldArchive = !isCorrect && newAttempts >= 2;
+      const isPartial = res.esito === 'parziale';
+      const isWrong = !isCorrect && !isPartial;
+
+      const newPartialCount = mod.partialCount + (isPartial ? 1 : 0);
+      const newWrongCount = mod.wrongCount + (isWrong ? 1 : 0);
+      const shouldDeepen = !isCorrect && newPartialCount >= 2;
+      const shouldArchive = !isCorrect && !isPartial && newAttempts >= 2;
 
       const newModules = [...modules];
       newModules[selectedIdx] = {
         ...mod,
         attempts: newAttempts,
+        partialCount: newPartialCount,
+        wrongCount: newWrongCount,
         feedback: res,
         hint: res.hint || mod.hint,
-        status: isCorrect ? 'completed' : shouldArchive ? 'archived' : 'partial',
-        archived: shouldArchive,
+        cosaManca: res.cosa_manca || mod.cosaManca,
+        status: isCorrect ? 'completed' : shouldDeepen ? 'approfondire' : shouldArchive ? 'archived' : 'partial',
+        archived: shouldArchive || shouldDeepen,
       };
       setModules(newModules);
       setSolution('');
 
       if (isCorrect && dbId) apiCompleteModule(dbId, lang).catch(() => {});
       if (shouldArchive && dbId) {
+        apiArchiveModule(dbId, lang).catch(() => {});
+        loadArchivedModules();
+      }
+      if (shouldDeepen && dbId) {
         apiArchiveModule(dbId, lang).catch(() => {});
         loadArchivedModules();
       }
@@ -284,17 +301,31 @@ export default function ModuleView() {
               <div className={`feedback-box ${mod.feedback.esito}`}>
                 <span className={`esito-badge ${mod.feedback.esito}`}>{t(mod.feedback.esito)}</span>
                 <p style={{ marginBottom: 8 }}>{mod.feedback.commento_costruttivo}</p>
-                <p style={{ color: 'var(--text-muted)' }}>{mod.feedback.suggerimento_miglioramento}</p>
+                {mod.submittedSolution && (
+                  <div style={{ marginTop: 12, padding: '12px', background: 'var(--bg)', borderRadius: 'var(--radius)' }}>
+                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'it' ? 'La tua soluzione' : 'Your solution'}</h4>
+                    <p style={{ fontSize: '0.9rem', fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>{mod.submittedSolution}</p>
+                  </div>
+                )}
+                <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>{mod.feedback.suggerimento_miglioramento}</p>
               </div>
             )}
 
             {mod.archived && (
-              <div className="hint-box">
-                <p>⚠️ {t('archived')} — questo modulo è stato archiviato dopo 2 tentativi. Puoi riaprirlo dalla sidebar.</p>
+              <div className={`hint-box ${mod.status === 'approfondire' ? '' : ''}`} style={mod.status === 'approfondire' ? { borderColor: 'var(--primary)', background: 'rgba(59,130,246,0.08)' } : {}}>
+                {mod.status === 'approfondire' ? (
+                  <>
+                    <h4 style={{ color: 'var(--primary)' }}>📝 {t('deepenLabel')}</h4>
+                    <p>{t('deepeningNote')}</p>
+                    {mod.cosaManca && <p style={{ marginTop: 8, fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>"{mod.cosaManca}"</p>}
+                  </>
+                ) : (
+                  <p>⚠️ {t('archived')} — {t('archivedAfterTwo')}</p>
+                )}
               </div>
             )}
 
-            {(mod.status === 'completed' || mod.archived) && mod.attempts > 0 && (
+            {mod.status !== 'completed' && (
               <div className="form-group" style={{ marginTop: 20 }}>
                 <h4 style={{ marginBottom: 8 }}>{t('needClarification')}</h4>
                 <textarea className="form-textarea" value={doubt} onChange={e => setDoubt(e.target.value)}

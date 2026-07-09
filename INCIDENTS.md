@@ -225,3 +225,47 @@ Registro degli errori tecnici e dei bug riscontrati durante lo sviluppo.
 **Logo MLPG (work in progress):** Logo SVG generato via Claude, cartuccia SNES + robot + glow.
 - **Errore:** Logo non visibile in sidebar con `st.markdown` (codice SVG visualizzato come testo) e `st.image()` (immagine rotta).
 - **Soluzione:** Rimosso temporaneamente dalla sidebar. Il file `logos/mlpg_logo.svg` è salvato per perfezionamento futuro.
+
+---
+
+## [9 Luglio 2026] - V2 React, Recovery Flow, Dashboard Bug Fixes
+
+### SQL non riconosciuto dal filtro euristico
+- **Errore:** Risposte SQL (CREATE TABLE, INSERT, etc.) venivano bocciate dal keyword overlap check perché senza parole in comune con l'esercizio.
+- **Soluzione:** Aggiunti indicatori SQL (`CREATE`, `SELECT`, `TABLE`, `FROM`, `WHERE`, `JOIN`, `INSERT`, `UPDATE`, `DELETE`) a `_code_indicators` in `valida_input_euristico()`.
+
+### Sanity check bloccava risposte prima del LLM
+- **Errore:** `sanity_check_risposta()` restituiva "non pertinente" per risposte SQL fuori focus, impedendo al LLM di valutarle.
+- **Soluzione:** Rimosso il sanity check dalla pipeline. Il LLM gestisce sia pertinenza che correttezza.
+
+### JWT secret non persistente tra restart
+- **Errore:** `_secret = ... + str(hash(time.time()))` cambiava ad ogni riavvio di Flask, invalidando tutti i token esistenti.
+- **Soluzione:** Sostituito con secret fisso `mlpg-v2-dev-secret-key-2026` (in produzione: `SECRET_KEY` env var).
+
+### Counter tentativi non resettato alla riapertura modulo
+- **Errore:** Dopo `api_reopen_module`, i tentativi precedenti restavano nel DB e il contatore mostrava 7/2.
+- **Soluzione:** Aggiunto `clear_module_attempts()` che cancella i vecchi tentativi alla riapertura. Frontend: stato `pending` con `attempts: 0`.
+
+### Dashboard crash: featuredBadges.map is not a function
+- **Errore:** `featured_badges` dal DB arrivava double-encoded (`"[...]"`) e il single-parse restituiva una stringa.
+- **Soluzione:** Double-parse in `featuredB` computation. Stato React separato `featuredB` per toggle live senza refresh.
+
+### Dashboard crash: fb.map is not a function (profilo pubblico)
+- **Errore:** Stesso problema double-encoding nel profilo pubblico della classifica.
+- **Soluzione:** Double-parse con fallback `Array.isArray()` nel modal profilo pubblico.
+
+### FinalSummary crash: diario_di_bordo.map is not a function
+- **Errore:** `diario_di_bordo` e' una stringa (da modello Pydantic), non un array. Il `.map()` crashava.
+- **Soluzione:** Renderizzato come testo con `whiteSpace: pre-wrap`.
+
+### Dashboard mostrava "Errore" generico
+- **Errore:** La chiamata API `/api/user/stats` falliva silenziosamente e la Dashboard mostrava solo "Errore".
+- **Soluzione:** Aggiunto messaggio di errore specifico (`error` state). Rate limit aumentato da 30 a 200 per sviluppo.
+
+### XP/livello non sincronizzati
+- **Errore:** Il backfill aggiornava XP senza ricalcolare il livello (utenti con 55 XP a livello 10).
+- **Soluzione:** Aggiunta funzione `_level_from_xp()` in `app.py`. Ricalcolo automatico a ogni aggiornamento XP.
+
+### Tema colore non visibile nella UI
+- **Errore:** Il colore tema selezionato veniva salvato nel DB ma mai applicato agli elementi visivi.
+- **Soluzione:** Applicato a: bordo card profilo, barra XP, badge featured, box statistiche profilo pubblico.

@@ -84,6 +84,21 @@ const translations = {
   allLevels: { it: 'Tutti i livelli', en: 'All levels' },
   topicPlaceholder: { it: 'es. Python decorators, algebra lineare...', en: 'e.g. Python decorators, linear algebra...' },
   namePlaceholder: { it: 'Studente', en: 'Student' },
+  archivedAfterTwo: { it: 'Questo modulo è stato archiviato dopo 2 tentativi errati. Puoi riaprirlo dalla lista moduli archiviati.', en: 'This module was archived after 2 failed attempts. You can reopen it from the archived modules list.' },
+  totalSessions: { it: 'Sessioni totali', en: 'Total sessions' },
+  passwordTooShort: { it: 'Password troppo corta (min 4 caratteri).', en: 'Password too short (min 4 characters).' },
+  passwordMismatch: { it: 'Le password non coincidono.', en: 'Passwords do not match.' },
+  confirmPassword: { it: 'Conferma password', en: 'Confirm password' },
+  alreadyHaveAccount: { it: 'Hai già un account?', en: 'Already have an account?' },
+  newUser: { it: 'Nuovo utente?', en: 'New user?' },
+  publicProfile: { it: 'Profilo pubblico', en: 'Public profile' },
+  noSessionData: { it: 'Nessun dato sessione.', en: 'No session data.' },
+  sessionNotFound: { it: 'Sessione non trovata.', en: 'Session not found.' },
+  explanation: { it: 'Spiegazione', en: 'Explanation' },
+  resume: { it: 'Riprendi', en: 'Resume' },
+  deepenLabel: { it: 'Da Approfondire', en: 'Needs Deepening' },
+  whatMissing: { it: 'Cosa mancava', en: 'What was missing' },
+  deepeningNote: { it: 'Hai mostrato comprensione dei concetti ma non hai centrato la richiesta specifica. Questo modulo sarà approfondito nel riepilogo finale.', en: 'You showed understanding of the concepts but missed the specific request. This module will be deepened in the final summary.' },
 };
 
 export function getLang() {

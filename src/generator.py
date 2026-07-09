@@ -200,8 +200,10 @@ def valida_input_euristico(esercizio: str, risposta_utente: str, lang: str = "it
         return False, tr("heuristic_too_short_eval", lang)
 
     _code_indicators = ("print(", "def ", "import ", "class ", " = ", "==",
-                        "{", "}", "for ", "while ", "if ", "elif ", "else:")
-    looks_like_code = any(c in risposta for c in _code_indicators)
+                        "{", "}", "for ", "while ", "if ", "elif ", "else:",
+                        "SELECT ", "CREATE ", "INSERT ", "UPDATE ", "DELETE ",
+                        "FROM ", "WHERE ", "JOIN ", "TABLE ", "--", "/*", "*/")
+    looks_like_code = any(c.upper() in risposta.upper() if c.isalpha() else c in risposta for c in _code_indicators)
 
     if not looks_like_code:
         exercise_keywords = set(
@@ -284,15 +286,16 @@ You must return EXCLUSIVELY a valid JSON with these fields:
   "punti_di_forza": ["Up to 3 analytical points extracted from the answer; do not copy the commento_costruttivo."],
   "punti_migliorabili": ["Elements to correct or explore further, with brief reason."],
   "suggerimento_miglioramento": "Practical, specific, future-oriented suggestion. A concrete tip on what to do next to improve. 1-2 sentences.",
-  "esito": "correct | partial | wrong"
+  "esito": "correct | partial | wrong",
+  "cosa_manca": "ONLY if esito is 'parziale': explain in 1-2 sentences SPECIFICALLY what the user missed or what the exercise required that the answer did not provide. Be precise, not generic."
 }}
 
 RULES:
 - `commento_costruttivo` and `suggerimento_miglioramento` must be DIFFERENT in style and content: the first praises and motivates, the second indicates a concrete next step.
 - If the user's answer is substantially correct and addresses the exercise accurately, set `esito` to "corretta". Provide at least 2 entries in `punti_di_forza` and 1-2 in `punti_migliorabili`.
-- If the answer is partly right but misses key elements or contains significant errors, set `esito` to "parziale".
+- If the answer is partly right but misses key elements or contains significant errors, set `esito` to "parziale". You MUST populate `cosa_manca` with a specific explanation of what was missing.
 - If the answer is WRONG, INCOMPLETE, IMPRECISE, or does not address the exercise asked: set `esito` to "sbagliata". Be strict: an answer that talks vaguely about the topic without addressing the specific question is SBAGLIATA.
-- If the answer expresses difficulty (e.g. "I don't know", "I don't understand", "I give up"): set `esito` to "parziale". Praise the honesty in `commento_costruttivo`. In `suggerimento_miglioramento` warmly invite them to use the "Ask for clarifications" button.
+- If the answer expresses difficulty (e.g. "I don't know", "I don't understand", "I give up"): set `esito` to "parziale". Praise the honesty in `commento_costruttivo`. In `suggerimento_miglioramento` warmly invite them to use the "Ask for clarifications" button. In `cosa_manca` explain that the answer was incomplete because the user didn't attempt a solution.
 - If the answer is completely off-topic, meaningless, random characters, jokes, or shows no effort: set `esito` to "sbagliata". Leave `punti_di_forza` empty. Gently explain the issue in `commento_costruttivo`.
 - IMPORTANT: "parziale" means the user GOT SOMETHING RIGHT. If the answer is wrong or misses the point entirely, use "sbagliata", NOT "parziale". The encouraging tone goes in `commento_costruttivo`, NOT in the esito field.
 - `punti_di_forza` must be analytical, concise and not repeat `commento_costruttivo`.
@@ -311,15 +314,16 @@ Devi restituire ESCLUSIVAMENTE un JSON valido con questi campi:
   "punti_di_forza": ["Max 3 punti analitici estratti dalla risposta; non copiare il commento_costruttivo."],
   "punti_migliorabili": ["Elementi da correggere o approfondire, con breve motivo."],
   "suggerimento_miglioramento": "Suggerimento pratico, specifico e orientato al futuro. Un consiglio concreto su cosa fare dopo per migliorare. 1-2 frasi.",
-  "esito": "corretta | parziale | sbagliata"
+  "esito": "corretta | parziale | sbagliata",
+  "cosa_manca": "SOLO se esito è 'parziale': spiega in 1-2 frasi COSA SPECIFICAMENTE mancava nella risposta o cosa l'esercizio richiedeva che non è stato fornito. Sii preciso, non generico."
 }}
 
 REGOLE:
 - `commento_costruttivo` e `suggerimento_miglioramento` devono essere DIVERSI tra loro per stile e contenuto: il primo elogia e motiva, il secondo indica un passo successivo concreto.
 - Se la risposta dell'utente è sostanzialmente corretta e affronta l'esercizio in modo accurato, imposta `esito` a "corretta". Fornisci almeno 2 voci in `punti_di_forza` e 1-2 in `punti_migliorabili`.
-- Se la risposta è in parte giusta ma manca di elementi chiave o contiene errori significativi, imposta `esito` a "parziale".
+- Se la risposta è in parte giusta ma manca di elementi chiave o contiene errori significativi, imposta `esito` a "parziale". DEVI popolare `cosa_manca` con una spiegazione specifica di cosa mancava.
 - Se la risposta è SBAGLIATA, INCOMPLETA, IMPRECISA, o non risponde alla domanda specifica dell'esercizio: imposta `esito` a "sbagliata". Sii severo: una risposta che parla vagamente del tema senza affrontare la domanda specifica è SBAGLIATA.
-- Se la risposta esprime difficoltà (es. "non lo so", "non capisco", "mi arrendo"): imposta `esito` a "parziale". Elogia l'onestà in `commento_costruttivo`. In `suggerimento_miglioramento` invita calorosamente a usare il pulsante "Chiedi chiarimenti".
+- Se la risposta esprime difficoltà (es. "non lo so", "non capisco", "mi arrendo"): imposta `esito` a "parziale". Elogia l'onestà in `commento_costruttivo`. In `suggerimento_miglioramento` invita calorosamente a usare il pulsante "Chiedi chiarimenti". In `cosa_manca` spiega che la risposta era incompleta perché l'utente non ha provato a rispondere.
 - Se la risposta è totalmente fuori tema, senza senso, caratteri casuali, barzellette, o non dimostra alcuno sforzo: imposta `esito` a "sbagliata". Lascia `punti_di_forza` vuoto. Spiega gentilmente in `commento_costruttivo`.
 - IMPORTANTE: "parziale" significa che l'utente ha AZZECCATO QUALCOSA. Se la risposta è sbagliata o fuori punto, usa "sbagliata", NON "parziale". Il tono incoraggiante va nel `commento_costruttivo`, NON nel campo `esito`.
 - `punti_di_forza` deve essere analitico, sintetico e non ripetere il `commento_costruttivo`.
@@ -605,17 +609,7 @@ def valuta_con_pipeline(
         result["message"] = motivo_eur
         return result
 
-    # 2. Sanity check
-    pertinente, motivo_sc = sanity_check_risposta(esercizio, soluzione, lang)
-    if not pertinente:
-        result["valido"] = False
-        msg = tr("not_pertinent", lang)
-        if motivo_sc:
-            msg += f": {motivo_sc}"
-        result["message"] = msg
-        return result
-
-    # 3. LLM evaluation
+    # 2. LLM evaluation (the LLM handles both correctness and pertinence)
     feedback = valuta_risposta(esercizio, soluzione, lang)
     result["feedback"] = feedback
     result["esito"] = feedback.esito
@@ -678,7 +672,8 @@ def valuta_risposta(esercizio: str, risposta_utente: str, lang: str = "it") -> F
             suggerimento_miglioramento=result.get('suggerimento_miglioramento', ''),
             punti_di_forza=result.get('punti_di_forza', []) if isinstance(result.get('punti_di_forza', []), list) else [],
             punti_migliorabili=result.get('punti_migliorabili', []) if isinstance(result.get('punti_migliorabili', []), list) else [],
-            esito=result.get('esito', '')
+            esito=result.get('esito', ''),
+            cosa_manca=result.get('cosa_manca') if result.get('esito', '') == 'parziale' else None,
         )
         return feedback
     except (json.JSONDecodeError, ValueError, ValidationError) as exc:
