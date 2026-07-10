@@ -14,3 +14,7 @@
 - [[Database-Backend-Compatibility|Database Backend Compatibility]] — PG vs SQLite dialect differences and fixes
 - [[Security-Hardening-Journey|Security Hardening Journey]] — 3 security fixes: passwords, debug, JWT
 - [[Streamlit-State-Management|Streamlit State Management]] — session_state patterns from 9 UI bugs
+- [[Step-Card-Navigation-Pattern|Step Card Navigation Pattern]] — CSS Grid cards with 5 visual states replacing dual UI
+- [[Split-Screen-Layout-Pattern|Split Screen Layout Pattern]] — 65/35 split with sticky bot sidebar and speech bubbles
+- [[Bot-Mascot-Integration|Bot Mascot Integration]] — 3-expression bot with glitch pixel transitions
+- [[Exercise-Structured-Layout|Exercise Structured Layout]] — Problem Data + Roadmap + Help panels

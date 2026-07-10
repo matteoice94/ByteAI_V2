@@ -13,6 +13,8 @@ updated: 2026-07-09T18:00:00
 - [[i18n-py-2026-07-08]] — MLPG Internationalization (code, 2026-07-08)
 - [[prompt-log-2026-07-09]] — PROMPT LOG — Prompt Engineering Chronicle (note, 2026-07-09)
 - [[incident-log-2026-07-09]] — INCIDENT LOG — Bug & Fix Chronicle (note, 2026-07-09)
+- [[moduleview-step-cards-2026-07-09]] — ModuleView Step Cards refactor (note, 2026-07-09)
+- [[ui-refactors-2026-07-10]] — UI Refactors July 10 (note, 2026-07-10)
 
 ## Entities
 - [[OpenRouter]] — LLM API provider for MLPG
@@ -32,3 +34,7 @@ updated: 2026-07-09T18:00:00
 - [[Database-Backend-Compatibility|Database Backend Compatibility]] — PostgreSQL vs SQLite dialect fixes
 - [[Security-Hardening-Journey|Security Hardening Journey]] — SHA-256→bcrypt, Flask debug, JWT secret
 - [[Streamlit-State-Management|Streamlit State Management]] — session_state patterns and anti-patterns
+- [[Step-Card-Navigation-Pattern|Step Card Navigation Pattern]] — Unified horizontal card navigation with 5 visual states
+- [[Split-Screen-Layout-Pattern|Split Screen Layout Pattern]] — 65/35 flex split with sticky bot sidebar
+- [[Bot-Mascot-Integration|Bot Mascot Integration]] — Pixel-art bot with glitch transitions
+- [[Exercise-Structured-Layout|Exercise Structured Layout]] — 3-panel exercise decomposition

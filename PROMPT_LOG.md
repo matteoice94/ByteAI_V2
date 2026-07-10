@@ -223,3 +223,19 @@ Registro delle modifiche e dei test effettuati sui prompt.
 - **Azione:** Profilo pubblico ridisegnato in layout Bento Grid con blocco identità, griglia statistiche 2x2 e showcase badge.
 - **Dettagli:** Badge toggliano live senza refresh (state React separato `featuredB`). Tema colore applicato a bordi card, barre XP, badge featured.
 - **Risultato:** UI reattiva con tema personalizzato visibile immediatamente.
+---
+## [10 Luglio 2026] - V2 UI Overhaul, max_tokens, text-only constraint, heuristic fix
+
+### Text-only exercise constraint
+- **Azione:** Aggiunta regola in system_mlpg.md e system_mlpg_en.md (CONSTRAINTS): esercizi risolvibili via testo. Vietati disegni, grafici, diagrammi.
+- **Obiettivo:** Evitare esercizi grafici su piattaforma testuale.
+- **Risultato:** L'LLM formula esercizi di algebra lineare/geometria come calcoli o dimostrazioni, non disegni.
+
+### max_tokens API fix
+- **Azione:** Aggiunto max_tokens a richiesta OpenRouter (PATH=4096, EVAL=1024, HINT=256, SUMMARY=2048).
+- **Obiettivo:** Risolvere JSON troncato per percorsi con 3 moduli.
+- **Risultato:** Risposte complete, parsing Pydantic stabile.
+
+### Heuristic filter fix
+- **Azione:** Keyword overlap bypassato per risposte >8 parole e >60 caratteri. Unique char: conteggio assoluto (<8 = spam) invece di ratio.
+- **Obiettivo:** Risposte cross-language non bloccate; testi lunghi non falsati dal ratio check.

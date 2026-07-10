@@ -269,3 +269,19 @@ Registro degli errori tecnici e dei bug riscontrati durante lo sviluppo.
 ### Tema colore non visibile nella UI
 - **Errore:** Il colore tema selezionato veniva salvato nel DB ma mai applicato agli elementi visivi.
 - **Soluzione:** Applicato a: bordo card profilo, barra XP, badge featured, box statistiche profilo pubblico.
+
+---
+
+## [10 Luglio 2026] - Heuristic filter falsi positivi + notifiche
+
+### Keyword overlap bloccava risposte cross-language
+- **Errore:** Esercizio IT, risposta EN -> zero keyword overlap -> bloccata come "non pertinente".
+- **Soluzione:** Bypass per risposte con >8 parole e >60 caratteri alfabetici.
+
+### Unique char ratio bloccava testi lunghi
+- **Errore:** unique_chars/total_chars < 0.3 fallisce per qualsiasi testo >86 caratteri (alfabeto ha 26 lettere).
+- **Soluzione:** Sostituito con unique_chars < 8 (meno di 8 lettere diverse in >80 caratteri = spam).
+
+### Sistema notifiche progressione
+- **Feature:** XP snackbar (top-center, cascata) + achievement popup (centrale, bounce+glitch) su completamento modulo.
+- **Dettagli:** NotificationContext React, barra XP animata con fill progressivo, popup per level up e badge.

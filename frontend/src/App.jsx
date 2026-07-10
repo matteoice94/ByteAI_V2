@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import PathGenerator from './components/PathGenerator';
 import ModuleView from './components/ModuleView';
@@ -9,7 +10,6 @@ import History from './components/History';
 import Dashboard from './components/Dashboard';
 import NavBar from './components/NavBar';
 import { getLang, setLang, t } from './i18n';
-import { useState } from 'react';
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -27,6 +27,13 @@ class ErrorBoundary extends Component {
 export default function App() {
   const { user, logout } = useAuth();
   const [lang, setLangState] = useState(getLang());
+  const [cursorPos, setCursorPos] = useState({ x: '-100%', y: '-100%' });
+
+  useEffect(() => {
+    function move(e) { setCursorPos({ x: `${e.clientX}px`, y: `${e.clientY}px` }); }
+    window.addEventListener('mousemove', move);
+    return () => window.removeEventListener('mousemove', move);
+  }, []);
 
   function switchLang(l) {
     setLang(l);
@@ -37,6 +44,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="cursor-glow" style={{ left: cursorPos.x, top: cursorPos.y }} />
       <NavBar user={user} lang={lang} onSwitchLang={switchLang} onLogout={logout} />
       <main className="main-content">
         <Routes>

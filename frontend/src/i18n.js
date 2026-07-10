@@ -1,7 +1,7 @@
 const LANG_KEY = 'mlpg_lang';
 
 const translations = {
-  appTitle: { it: 'MLPG Tutor', en: 'MLPG Tutor' },
+  appTitle: { it: 'ByteAI', en: 'ByteAI' },
   login: { it: 'Accedi', en: 'Login' },
   register: { it: 'Registrati', en: 'Register' },
   username: { it: 'Username', en: 'Username' },

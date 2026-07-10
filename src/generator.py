@@ -16,6 +16,11 @@ from .config import (
     CHAT_TIMEOUT,
     CHAT_TEMPERATURE_DEFAULT,
     CHAT_TEMPERATURE_HINT,
+    CHAT_MAX_TOKENS_DEFAULT,
+    CHAT_MAX_TOKENS_PATH,
+    CHAT_MAX_TOKENS_EVAL,
+    CHAT_MAX_TOKENS_HINT,
+    CHAT_MAX_TOKENS_SUMMARY,
     MAX_RETRIES,
     WAIT_SECONDS,
     ENABLE_SANITY_CHECK,
@@ -39,12 +44,13 @@ def _get_openrouter_api_key():
     return api_key
 
 
-def _openrouter_chat_completion(messages, temperature: float = 0.2, model: str | None = None, timeout: int = CHAT_TIMEOUT):
+def _openrouter_chat_completion(messages, temperature: float = 0.2, model: str | None = None, timeout: int = CHAT_TIMEOUT, max_tokens: int = CHAT_MAX_TOKENS_DEFAULT):
     api_key = _get_openrouter_api_key()
     payload = {
         "model": model or OPENROUTER_MODEL,
         "messages": messages,
         "temperature": temperature,
+        "max_tokens": max_tokens,
     }
     request_data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
@@ -76,8 +82,8 @@ def _openrouter_chat_completion(messages, temperature: float = 0.2, model: str |
         raise RuntimeError(f"{tr('gen_network_error')}: {exc.reason}") from exc
 
 
-def _get_chat_response_text(messages, temperature: float = CHAT_TEMPERATURE_DEFAULT, model: str | None = None, timeout: int = CHAT_TIMEOUT):
-    response = _call_with_retries(lambda: _openrouter_chat_completion(messages, temperature, model, timeout))
+def _get_chat_response_text(messages, temperature: float = CHAT_TEMPERATURE_DEFAULT, model: str | None = None, timeout: int = CHAT_TIMEOUT, max_tokens: int = CHAT_MAX_TOKENS_DEFAULT):
+    response = _call_with_retries(lambda: _openrouter_chat_completion(messages, temperature, model, timeout, max_tokens))
     choices = response.get("choices")
     if not choices or not isinstance(choices, list):
         raise RuntimeError(tr("gen_no_choices"))
@@ -192,8 +198,8 @@ def valida_input_euristico(esercizio: str, risposta_utente: str, lang: str = "it
 
     alpha_chars = [c.lower() for c in risposta if c.isalpha()]
     if len(alpha_chars) > 80:
-        unique_ratio = len(set(alpha_chars)) / len(alpha_chars)
-        if unique_ratio < 0.3:
+        unique_chars = len(set(alpha_chars))
+        if unique_chars < 8:
             return False, tr("heuristic_random_chars", lang)
 
     if len(words) <= 2 and len(risposta) < 15:
@@ -219,7 +225,8 @@ def valida_input_euristico(esercizio: str, risposta_utente: str, lang: str = "it
         if exercise_keywords and response_words_set:
             overlap = exercise_keywords & response_words_set
             if len(overlap) == 0:
-                return False, tr("heuristic_irrelevant", lang)
+                if len(words) < 8 and len(alpha_chars) < 60:
+                    return False, tr("heuristic_irrelevant", lang)
 
     return True, ""
 
@@ -639,7 +646,7 @@ def generate_microlearning_path(topic: str, level: str, context_modules: list | 
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
-    response_text = _get_chat_response_text(messages)
+    response_text = _get_chat_response_text(messages, max_tokens=CHAT_MAX_TOKENS_PATH)
 
     try:
         return TutorResponse.model_validate_json(_normalize_json_text(response_text))
@@ -663,7 +670,7 @@ def valuta_risposta(esercizio: str, risposta_utente: str, lang: str = "it") -> F
         {"role": "system", "content": system_content},
         {"role": "user", "content": evaluation_prompt},
     ]
-    response_text = _get_chat_response_text(messages)
+    response_text = _get_chat_response_text(messages, max_tokens=CHAT_MAX_TOKENS_EVAL)
 
     try:
         result = json.loads(_normalize_json_text(response_text))
@@ -703,7 +710,7 @@ def genera_hint(esercizio: str, risposta_utente: str, livello: str, tentativo: i
     }
 
     try:
-        hint = _get_chat_response_text(messages, temperature=CHAT_TEMPERATURE_HINT)
+        hint = _get_chat_response_text(messages, temperature=CHAT_TEMPERATURE_HINT, max_tokens=CHAT_MAX_TOKENS_HINT)
         if hint and len(hint) > 5:
             return hint
     except Exception:
@@ -739,7 +746,7 @@ def genera_riepilogo_finale(storico_risposte: list[dict], diario_note: list[str]
         {"role": "system", "content": system_content},
         {"role": "user", "content": summary_prompt},
     ]
-    response_text = _get_chat_response_text(messages)
+    response_text = _get_chat_response_text(messages, max_tokens=CHAT_MAX_TOKENS_SUMMARY)
 
     try:
         return RiepilogoFinale.model_validate_json(_normalize_json_text(response_text))

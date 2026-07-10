@@ -75,6 +75,12 @@ Initial `system_mlpg.md` created from Spec v3.0. Core requirements:
 - Sanity check removed from pipeline entirely — LLM handles both relevance and correctness
 - SQL indicators (`CREATE`, `SELECT`, `TABLE`, etc.) added to code detection
 
+### Phase 10: Exercise Type Constraints (July 10)
+- Added text-only exercise constraint to both `system_mlpg.md` and `system_mlpg_en.md`
+- Rule: Every exercise must be solvable via text input (calculation, code, proof, explanation)
+- Explicitly forbids: drawings, graphs, diagrams, visual representations, graphical manipulations
+- For visual subjects (geometry, linear algebra): reformulate as computational/textual tasks
+
 ## Key Architectural Decisions
 
 1. **Prompt files as single source of truth**: LLM prompts in `Prompts/` directory, versioned in git

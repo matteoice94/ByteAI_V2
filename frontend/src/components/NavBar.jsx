@@ -4,7 +4,7 @@ import { t } from '../i18n';
 export default function NavBar({ user, lang, onSwitchLang, onLogout }) {
   return (
     <nav className="navbar">
-      <div className="navbar-brand">MLPG</div>
+      <div className="navbar-brand">ByteAI</div>
       <div className="navbar-links">
         <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           {t('newPath')}

@@ -1,5 +1,22 @@
 # Operation Log
 
+## 2026-07-10
+**Operation**: ingest
+**Source**: ui-refactors-2026-07-10
+**Pages created**: vault/sources/ui-refactors-2026-07-10.md, vault/concepts/Split-Screen-Layout-Pattern.md, vault/concepts/Bot-Mascot-Integration.md, vault/concepts/Exercise-Structured-Layout.md
+**Key insight**: Comprehensive V2 UI overhaul: split-screen (65/35) with sticky bot sidebar and speech bubbles; pixel-art bot with 12-pixel glitch transitions context-based; structured exercise panels (Problem Data + Roadmap + Formula Help); Bento Grid dashboard; unified form/IDE styling. Backend: max_tokens fix + text-only exercise constraint.
+
+---
+
+## 2026-07-09 19:00
+**Operation**: ingest
+**Source**: moduleview-step-cards-2026-07-09
+**Pages created**: vault/sources/moduleview-step-cards-2026-07-09.md, vault/concepts/Step-Card-Navigation-Pattern.md
+**Pages updated**: vault/index.md, vault/sources/_index.md, vault/concepts/_index.md, vault/hot.md, vault/overview.md
+**Key insight**: Unified dual redundant navigation (timeline nodes + pill buttons) into CSS Grid step cards. Five visual states (completed/active/archived/deepen/pending) with teal/purple/orange color coding. Active badge has pulsing ring animation; cards lift on hover.
+
+---
+
 ## 2026-07-09
 **Operation**: ingest
 **Sources**: prompt-log-2026-07-09, incident-log-2026-07-09

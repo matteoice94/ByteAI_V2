@@ -144,11 +144,11 @@ export default function Dashboard() {
               <div className="value">{accuracy}%</div>
               <div className="label">Accuracy</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card streak">
               <div className="value">{stats.current_streak || 0}g</div>
               <div className="label">{t('streak')}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card streak">
               <div className="value">{stats.max_streak || 0}g</div>
               <div className="label">{t('maxStreak')}</div>
             </div>
@@ -179,7 +179,7 @@ export default function Dashboard() {
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {AVATARS.map(a => (
               <button key={a} onClick={() => handleAvatar(a)}
-                      style={{ fontSize: '1.8rem', padding: 4, border: stats.avatar === a ? '2px solid var(--primary)' : '2px solid transparent', borderRadius: 8, background: 'transparent', cursor: 'pointer' }}>
+                      className={`avatar-btn ${stats.avatar === a ? 'selected' : ''}`}>
                 {a}
               </button>
             ))}
@@ -190,7 +190,8 @@ export default function Dashboard() {
           <div style={{ display: 'flex', gap: 8 }}>
             {THEMES.map(c => (
               <button key={c} onClick={() => handleTheme(c)}
-                      style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: stats.theme_color === c ? '3px solid white' : '2px solid transparent', cursor: 'pointer' }} />
+                      className={`theme-btn ${stats.theme_color === c ? 'selected' : ''}`}
+                      style={{ background: c }} />
             ))}
           </div>
         </div>
@@ -226,7 +227,7 @@ export default function Dashboard() {
           <p style={{ color: 'var(--text-muted)' }}>Nessun dato.</p>
         ) : (
           leaderboard.map((entry, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+            <div key={i} className="leaderboard-row">
               <span style={{ fontWeight: 700, color: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-muted)', width: 24 }}>
                 #{i + 1}
               </span>
