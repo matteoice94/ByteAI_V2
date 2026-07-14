@@ -22,7 +22,7 @@ ENABLE_HEURISTIC_FILTER = True
 
 # ── Retry ──────────────────────────────────────────────────
 MAX_RETRIES = 3
-WAIT_SECONDS = 30
+WAIT_SECONDS = 10
 
 # ── OpenRouter Embedding ───────────────────────────────────
 OPENROUTER_EMBED_URL = "https://openrouter.ai/api/v1/embeddings"
