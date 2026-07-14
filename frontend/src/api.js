@@ -85,7 +85,7 @@ export async function apiReopenModule(moduleDbId) {
 }
 
 export async function apiSessionDetail(sessionId, lang) {
-  return get(`${BASE}/session/${sessionId}?lang=${lang}`);
+  return post(`${BASE}/session-detail`, { session_id: sessionId, lang });
 }
 
 export async function apiHistory() {
