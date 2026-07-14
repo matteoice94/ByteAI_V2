@@ -285,3 +285,37 @@ Registro degli errori tecnici e dei bug riscontrati durante lo sviluppo.
 ### Sistema notifiche progressione
 - **Feature:** XP snackbar (top-center, cascata) + achievement popup (centrale, bounce+glitch) su completamento modulo.
 - **Dettagli:** NotificationContext React, barra XP animata con fill progressivo, popup per level up e badge.
+
+## [10 Luglio 2026] - Post-analysis bug fixes
+
+### JWT secret hardcoded
+- **Errore:** SECRET_KEY default = 'mlpg-v2-dev-secret-key-2026' in chiaro nel codice.
+- **Soluzione:** Rimossa default; ora richiede env var obbligatoria.
+
+### Prompt: {livello_utente} irrisolto
+- **Errore:** system_mlpg.md conteneva {livello_utente} letterale, mai sostituito.
+- **Soluzione:** Aggiunto .replace('{livello_utente}', level) in generator.py.
+
+### Prompt: task 3-4 inutilizzati
+- **Errore:** Il system prompt di generazione includeva istruzioni per valutazione e chiarimenti, ma queste usano prompt dedicati.
+- **Soluzione:** Rimosse task 3-4, risparmio ~70 token/chiamata.
+
+### i18n: esito sempre in italiano
+- **Errore:** Backend restituisce 'corretta'/'parziale'/'sbagliata' ma t() cercava 'correct'/'partial'/'wrong'.
+- **Soluzione:** Aggiunte chiavi italiane come alias.
+
+### DB connection leaks
+- **Errore:** 20+ funzioni senza try/finally su _get_conn()/conn.close().
+- **Soluzione:** Aggiunto context manager (__enter__/__exit__) a _DB; save_session convertita a 'with'.
+
+### api_final_summary non chiamava check_badges
+- **Errore:** Completamento percorso calcolava XP manualmente senza chiamare award_user_xp(), saltando badge e streak.
+- **Soluzione:** Sostituito calcolo manuale con award_user_xp(user_id, 25, 'path_completed').
+
+### XSS in MarkdownRenderer
+- **Errore:** dangerouslySetInnerHTML su output LLM senza sanitizzazione.
+- **Soluzione:** Aggiunto DOMPurify.sanitize().
+
+### SVG counter non thread-safe
+- **Errore:** _svg_counter globale mutabile causa collisioni ID in multi-worker.
+- **Soluzione:** Sostituito con time.time() per ID univoci.

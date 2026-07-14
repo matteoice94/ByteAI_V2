@@ -6,7 +6,7 @@ updated: 2026-07-10T20:00:00
 # Recent Context
 
 ## Last Updated
-2026-07-10 — Named bot "Pyxel" and site "ByteAI"; applied across all UI surfaces
+2026-07-10 — v1.0 bug fixes: 12 issues resolved (JWT, prompts, DB, i18n, XSS, SVG counter)
 
 ## Key Recent Facts
 - Split-screen layout (65/35) with sticky bot sidebar used across PathGenerator and ModuleView

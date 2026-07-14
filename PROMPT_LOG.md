@@ -239,3 +239,8 @@ Registro delle modifiche e dei test effettuati sui prompt.
 ### Heuristic filter fix
 - **Azione:** Keyword overlap bypassato per risposte >8 parole e >60 caratteri. Unique char: conteggio assoluto (<8 = spam) invece di ratio.
 - **Obiettivo:** Risposte cross-language non bloccate; testi lunghi non falsati dal ratio check.
+
+## [10 Luglio 2026] - Prompt cleanup + {livello_utente} substitution
+- **Azione:** Rimosse task 3-4 (valutazione e chiarimenti) dal prompt di generazione — gestiti da prompt separati. Aggiunta sostituzione \{livello_utente}\ in generator.py.
+- **Obiettivo:** Ridurre token sprecati (~70 a chiamata) e correggere variabile irrisolta nel system prompt.
+- **Risultato:** Prompt piu' conciso, variabile correttamente popolata.
