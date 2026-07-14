@@ -71,6 +71,17 @@ class _DB:
     def __getattr__(self, name):
         return getattr(self._conn, name)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.commit()
+        else:
+            self.rollback()
+        self.close()
+        return False
+
 
 def _get_conn():
     if IS_PG:
@@ -767,34 +778,32 @@ def backfill_user_stats():
 
 def save_session(topic: str, level: str, modules_data: list[dict], user_id: int | None = None) -> int:
     logger.info("Salvataggio sessione: topic=%s, level=%s, moduli=%d", topic, level, len(modules_data))
-    conn = _get_conn()
-    now = datetime.now().isoformat()
-    session_id = _insert_returning_id(
-        conn,
-        "INSERT INTO sessions (topic, level, created_at, user_id) VALUES (?, ?, ?, ?)",
-        (topic, level, now, user_id),
-    )
+    with _get_conn() as conn:
+        now = datetime.now().isoformat()
+        session_id = _insert_returning_id(
+            conn,
+            "INSERT INTO sessions (topic, level, created_at, user_id) VALUES (?, ?, ?, ?)",
+            (topic, level, now, user_id),
+        )
 
-    for i, mod in enumerate(modules_data):
-        testo_embed = f"{mod.get('titolo_modulo', mod.get('titolo', ''))} {mod.get('spiegazione', '')}"
-        titolo = mod.get("titolo_modulo") or mod.get("titolo", "")
-        spiegazione = mod.get("spiegazione", "")
-        esercizio = mod.get("esercizio_pratico") or mod.get("esercizio", "")
-        try:
-            emb = compute_embedding(testo_embed)
-            emb_json = json.dumps(emb)
-        except Exception:
-            emb_json = None
+        for i, mod in enumerate(modules_data):
+            testo_embed = f"{mod.get('titolo_modulo', mod.get('titolo', ''))} {mod.get('spiegazione', '')}"
+            titolo = mod.get("titolo_modulo") or mod.get("titolo", "")
+            spiegazione = mod.get("spiegazione", "")
+            esercizio = mod.get("esercizio_pratico") or mod.get("esercizio", "")
+            try:
+                emb = compute_embedding(testo_embed)
+                emb_json = json.dumps(emb)
+            except Exception:
+                emb_json = None
 
-        conn.execute(
-            _adapt("INSERT INTO modules (session_id, module_index, titolo, spiegazione, esercizio, embedding) "
-                    "VALUES (?, ?, ?, ?, ?, ?)"),
+            conn.execute(
+                _adapt("INSERT INTO modules (session_id, module_index, titolo, spiegazione, esercizio, embedding) "
+                        "VALUES (?, ?, ?, ?, ?, ?)"),
             (session_id, i, titolo, spiegazione, esercizio, emb_json),
         )
 
-    conn.commit()
-    conn.close()
-    return session_id
+        return session_id
 
 
 def save_attempt(module_db_id: int, soluzione: str, esito: str, feedback_json: str):

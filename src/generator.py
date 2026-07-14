@@ -575,7 +575,8 @@ def sanity_check_risposta(esercizio: str, risposta_utente: str, lang: str = "it"
         is_pertinent = result.get('pertinente', True)
         motivo = result.get('motivo', '')
         return is_pertinent, motivo
-    except Exception:
+    except Exception as e:
+        logger.warning("Sanity check failed, falling through to LLM evaluation: %s", e)
         return True, ""
 
 
@@ -641,7 +642,7 @@ def generate_microlearning_path(topic: str, level: str, context_modules: list | 
         user_prompt += contesto
 
     system_prompt_path = get_system_prompt_path(lang)
-    system_prompt = system_prompt_path.read_text(encoding='utf-8')
+    system_prompt = system_prompt_path.read_text(encoding='utf-8').replace('{livello_utente}', level)
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},

@@ -32,6 +32,7 @@ from src.database import (
     get_user_stats,
     get_leaderboard,
     update_user_stats,
+    award_user_xp,
     rename_session,
     delete_session,
     rename_module,
@@ -41,15 +42,9 @@ from src.config import RAG_TOP_K
 from src.i18n import tr
 
 app = Flask(__name__)
-_secret = os.environ.get("SECRET_KEY", "mlpg-v2-dev-secret-key-2026")
-_XP_THRESHOLDS = [0, 50, 120, 220, 350, 520, 740, 1020, 1370, 1800]
-
-def _level_from_xp(xp: int) -> int:
-    level = 1
-    for t in _XP_THRESHOLDS:
-        if (xp or 0) >= t:
-            level = _XP_THRESHOLDS.index(t) + 1
-    return level
+_secret = os.environ.get("SECRET_KEY")
+if not _secret:
+    raise RuntimeError("SECRET_KEY environment variable is required. Set it before starting the app.")
 
 def _make_token(user_id: int, username: str) -> str:
     payload = json.dumps({"user_id": user_id, "username": username, "exp": time.time() + 86400 * 7})
@@ -303,12 +298,7 @@ def api_final_summary():
         # Award path completion XP
         payload = _require_auth()
         if payload:
-            stats = get_user_stats(payload['user_id'])
-            xp = (stats.get('xp', 0) or 0) + 25
-            level = _level_from_xp(xp)
-            paths = (stats.get('total_paths_completed', 0) or 0) + 1
-            sessions = (stats.get('total_sessions', 0) or 0) + 1
-            update_user_stats(payload['user_id'], {'xp': xp, 'level': level, 'total_paths_completed': paths, 'total_sessions': sessions})
+            award_user_xp(payload['user_id'], 25, 'path_completed')
         return jsonify({'success': True, 'data': riepilogo.model_dump()}), 200
     except Exception as exc:
         return jsonify({'success': False, 'error': str(exc)}), 500

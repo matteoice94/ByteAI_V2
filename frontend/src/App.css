@@ -122,7 +122,6 @@ body::after {
   border-bottom: 1px solid var(--border);
   gap: 16px;
 }
-.navbar-brand { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
 .navbar-links { display: flex; gap: 8px; }
 .navbar-right { display: flex; align-items: center; gap: 12px; }
 

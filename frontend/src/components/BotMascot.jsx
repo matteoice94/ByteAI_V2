@@ -38,10 +38,11 @@ export default function BotMascot({ mood = 'neutral' }) {
 
   useEffect(() => {
     if (mood !== displayMood) {
-      if (timerRef.current) { clearTimeout(timerRef.current.t1); clearTimeout(timerRef.current.t2); }
+      if (timerRef.current) clearTimeout(timerRef.current.t1);
       setGlitchKey(k => k + 1);
+      const targetMood = mood;
       const t1 = setTimeout(() => {
-        setDisplayMood(mood);
+        setDisplayMood(targetMood);
         setGlitchKey(0);
       }, 2500);
       timerRef.current = { t1 };

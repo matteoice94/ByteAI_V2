@@ -205,13 +205,8 @@ BADGE_CATEGORIES = {
 }
 
 
-_svg_counter = 0
-
-
 def badge_svg(badge_key: str, lang: str = "it", size: int = 60, locked: bool = False) -> str:
     """Render a badge as SVG (doppio anello style)."""
-    global _svg_counter
-    _svg_counter += 1
     info = badge_info(badge_key, lang)
     icon = info["icon"] if not locked else "🔒"
     cat = BADGE_CATEGORIES.get(badge_key, "moduli")
@@ -220,7 +215,8 @@ def badge_svg(badge_key: str, lang: str = "it", size: int = 60, locked: bool = F
     if locked:
         colors = {"main": "#aaa", "light": "#ddd", "dark": "#888"}
 
-    uid = f"{badge_key}_{_svg_counter}"
+    import time
+    uid = f"{badge_key}_{int(time.time() * 1000000) % 1000000}"
     return (
         f'<svg width="{size}" height="{size}" viewBox="0 0 60 60">'
         f'<defs>'

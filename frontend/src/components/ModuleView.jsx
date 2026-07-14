@@ -5,6 +5,7 @@ import { apiEvaluate, apiHint, apiArchiveModule, apiCompleteModule, apiClarify, 
 import { t, getLang } from '../i18n';
 import BotMascot from './BotMascot';
 import { useNotify } from '../context/NotificationContext';
+import DOMPurify from 'dompurify';
 
 function MarkdownRenderer({ content }) {
   const [renderer, setRenderer] = useState(null);
@@ -41,7 +42,7 @@ function MarkdownRenderer({ content }) {
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n- (.+)/g, '<br/>• $1')
     .replace(/\n(\d+)\. (.+)/g, '<br/>$1. $2');
-  return <div className="explanation-content" dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div className="explanation-content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />;
 }
 
 export default function ModuleView() {
