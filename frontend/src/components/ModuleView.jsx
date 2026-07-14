@@ -121,11 +121,11 @@ export default function ModuleView() {
 
   useEffect(() => {
     loadArchivedModules();
-  }, [user.token]);
+  }, []);
 
   async function loadArchivedModules() {
     try {
-      const res = await apiHistory(user.token);
+      const res = await apiHistory();
       const sessions = res.data || [];
       const archived = [];
       for (const s of sessions) {
@@ -185,7 +185,7 @@ export default function ModuleView() {
     setBotMood('thinking');
     try {
       const dbId = moduleDbIds[String(mod.id)];
-      const res = await apiEvaluate(mod.esercizio_pratico, solution, sessionData.percorso_studio.livello, dbId, mod.attempts, lang, user.token);
+      const res = await apiEvaluate(mod.esercizio_pratico, solution, sessionData.percorso_studio.livello, dbId, mod.attempts, lang);
       const newAttempts = mod.attempts + 1;
       const isCorrect = res.esito === 'corretta';
       const isPartial = res.esito === 'parziale';
@@ -275,7 +275,7 @@ export default function ModuleView() {
 
   async function handleReopen(moduleDbId) {
     try {
-      await apiReopenModule(moduleDbId, user.token);
+      await apiReopenModule(moduleDbId);
       loadArchivedModules();
       setShowArchived(false);
     } catch {}

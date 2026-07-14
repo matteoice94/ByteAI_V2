@@ -4,6 +4,9 @@ import hmac
 import json
 import base64
 import hashlib
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / '.env', override=True)
 from collections import defaultdict
 from flask import Flask, render_template, request, jsonify
 from src.generator import (
@@ -66,10 +69,14 @@ def _verify_token(token: str) -> dict | None:
         return None
 
 def _require_auth():
+    token = None
     auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
+    if auth.startswith("Bearer "):
+        token = auth[7:]
+    if not token:
+        token = request.cookies.get("bt_token")
+    if not token:
         return None
-    token = auth[7:]
     payload = _verify_token(token)
     if not payload:
         return None
@@ -348,7 +355,9 @@ def api_register():
     if not uid:
         return jsonify({'success': False, 'error': 'Username già esistente.'}), 409
     token = _make_token(uid, username)
-    return jsonify({'success': True, 'token': token, 'user_id': uid, 'username': username}), 201
+    resp = jsonify({'success': True, 'token': token, 'user_id': uid, 'username': username})
+    resp.set_cookie("bt_token", token, httponly=True, samesite="Lax", max_age=86400*7, path="/")
+    return resp, 201
 
 
 @app.route('/api/login', methods=['POST'])
@@ -362,7 +371,16 @@ def api_login():
     if not user:
         return jsonify({'success': False, 'error': 'Credenziali errate.'}), 401
     token = _make_token(user['id'], user['username'])
-    return jsonify({'success': True, 'token': token, 'user_id': user['id'], 'username': user['username']}), 200
+    resp = jsonify({'success': True, 'token': token, 'user_id': user['id'], 'username': user['username']})
+    resp.set_cookie("bt_token", token, httponly=True, samesite="Lax", max_age=86400*7, path="/")
+    return resp, 200
+
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    resp = jsonify({'success': True})
+    resp.delete_cookie("bt_token", path="/")
+    return resp
 
 
 # ── User Stats ────────────────────────────────────────────

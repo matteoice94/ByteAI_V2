@@ -1,155 +1,109 @@
 const BASE = '/api';
-
-function headers(token) {
-  const h = { 'Content-Type': 'application/json' };
-  if (token) h['Authorization'] = `Bearer ${token}`;
-  return h;
-}
+const TIMEOUT = 30000;
 
 async function request(url, options = {}) {
-  const res = await fetch(url, options);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-  return data;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) {
+      let data;
+      try { data = await res.json(); } catch { data = {}; }
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Richiesta scaduta. Riprova.');
+    throw err;
+  }
+}
+
+function post(url, body) {
+  return request(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+function get(url) {
+  return request(url);
 }
 
 export async function apiRegister(username, password) {
-  return request(`${BASE}/register`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ username, password }),
-  });
+  return post(`${BASE}/register`, { username, password });
 }
 
 export async function apiLogin(username, password) {
-  return request(`${BASE}/login`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ username, password }),
-  });
+  return post(`${BASE}/login`, { username, password });
 }
 
-export async function apiGenerate(topic, level, name, lang, token) {
-  return request(`${BASE}/generate`, {
-    method: 'POST',
-    headers: headers(token),
-    body: JSON.stringify({ topic, level, name, lang }),
-  });
+export async function apiGenerate(topic, level, name, lang) {
+  return post(`${BASE}/generate`, { topic, level, name, lang });
 }
 
-export async function apiEvaluate(esercizio, soluzione, livello, module_db_id, tentativi, lang, token) {
-  return request(`${BASE}/evaluate`, {
-    method: 'POST',
-    headers: headers(token),
-    body: JSON.stringify({ esercizio, soluzione, livello, module_db_id, tentativi, lang }),
-  });
+export async function apiEvaluate(esercizio, soluzione, livello, module_db_id, tentativi, lang) {
+  return post(`${BASE}/evaluate`, { esercizio, soluzione, livello, module_db_id, tentativi, lang });
 }
 
 export async function apiHint(esercizio, soluzione, livello, tentativo, lang) {
-  return request(`${BASE}/hint`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ esercizio, soluzione, livello, tentativo, lang }),
-  });
+  return post(`${BASE}/hint`, { esercizio, soluzione, livello, tentativo, lang });
 }
 
-export async function apiClarify(argomento, spiegazione, dubbio, livello, lang) {
-  return request(`${BASE}/clarify`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ argomento, spiegazione, dubbio, livello, lang }),
-  });
+export async function apiArchiveModule(moduleDbId, lang) {
+  return post(`${BASE}/archive-module`, { module_db_id: moduleDbId, lang });
 }
 
-export async function apiFinalSummary(solutions, diary, livello, session_id, lang) {
-  return request(`${BASE}/final-summary`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ solutions, diary, livello, session_id, lang }),
-  });
+export async function apiCompleteModule(moduleDbId, lang) {
+  return post(`${BASE}/complete-module`, { module_db_id: moduleDbId, lang });
 }
 
-export async function apiArchiveModule(module_db_id, lang) {
-  return request(`${BASE}/archive-module`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ module_db_id, lang }),
-  });
+export async function apiClarify(titolo, spiegazione, dubbio, livello, lang) {
+  return post(`${BASE}/clarify`, { titolo_modulo: titolo, spiegazione, dubbio_utente: dubbio, livello, lang });
 }
 
-export async function apiCompleteModule(module_db_id, lang) {
-  return request(`${BASE}/complete-module`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ module_db_id, lang }),
-  });
+export async function apiFinalSummary(solutions, diary, livello, sessionId, lang) {
+  return post(`${BASE}/final-summary`, { solutions, diary, livello, session_id: sessionId, lang });
 }
 
-export async function apiHistory(token) {
-  return request(`${BASE}/history`, { headers: headers(token) });
+export async function apiReopenModule(moduleDbId) {
+  return post(`${BASE}/reopen-module`, { module_db_id: moduleDbId });
 }
 
-export async function apiSessionDetail(session_id, lang) {
-  return request(`${BASE}/session-detail`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({ session_id, lang }),
-  });
+export async function apiSessionDetail(sessionId, lang) {
+  return get(`${BASE}/session/${sessionId}?lang=${lang}`);
 }
 
-export async function apiTranslations(lang) {
-  return request(`${BASE}/translations?lang=${lang}`);
+export async function apiHistory() {
+  return get(`${BASE}/history`);
 }
 
-export async function apiUserStats(token) {
-  return request(`${BASE}/user/stats`, { headers: headers(token) });
+export async function apiUserStats() {
+  return get(`${BASE}/user/stats`);
 }
 
-export async function apiLeaderboard(token) {
-  return request(`${BASE}/leaderboard`, { headers: headers(token) });
+export async function apiLeaderboard() {
+  return get(`${BASE}/leaderboard`);
 }
 
-export async function apiUpdateProfile(avatar, theme_color, featured_badges, token) {
-  return request(`${BASE}/user/profile`, {
-    method: 'PUT',
-    headers: headers(token),
-    body: JSON.stringify({ avatar, theme_color, featured_badges }),
-  });
+export async function apiUpdateProfile(avatar, themeColor, featuredBadges) {
+  return post(`${BASE}/user/profile`, { avatar, theme_color: themeColor, featured_badges: featuredBadges });
 }
 
-export async function apiRenameSession(sessionId, topic, token) {
-  return request(`${BASE}/session/${sessionId}/rename`, {
-    method: 'PUT',
-    headers: headers(token),
-    body: JSON.stringify({ topic }),
-  });
+export async function apiRenameSession(sessionId, newTopic) {
+  return post(`${BASE}/rename-session`, { session_id: sessionId, new_topic: newTopic });
 }
 
-export async function apiDeleteSession(sessionId, token) {
-  return request(`${BASE}/session/${sessionId}`, {
-    method: 'DELETE',
-    headers: headers(token),
-  });
+export async function apiDeleteSession(sessionId) {
+  return post(`${BASE}/delete-session`, { session_id: sessionId });
 }
 
-export async function apiRenameModule(moduleId, title, token) {
-  return request(`${BASE}/module/${moduleId}/rename`, {
-    method: 'PUT',
-    headers: headers(token),
-    body: JSON.stringify({ title }),
-  });
+export async function apiRenameModule(moduleId, newTitle) {
+  return post(`${BASE}/rename-module`, { module_id: moduleId, new_title: newTitle });
 }
 
-export async function apiDeleteModule(moduleId, token) {
-  return request(`${BASE}/module/${moduleId}`, {
-    method: 'DELETE',
-    headers: headers(token),
-  });
-}
-
-export async function apiReopenModule(moduleId, token) {
-  return request(`${BASE}/module/${moduleId}/reopen`, {
-    method: 'POST',
-    headers: headers(token),
-  });
+export async function apiDeleteModule(moduleId) {
+  return post(`${BASE}/delete-module`, { module_id: moduleId });
 }

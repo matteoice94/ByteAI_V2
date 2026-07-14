@@ -41,8 +41,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      apiUserStats(user.token).catch(e => { setError(e.message); return null; }),
-      apiLeaderboard(user.token).catch(e => { console.error(e); return []; }),
+      apiUserStats().catch(e => { setError(e.message); return null; }),
+      apiLeaderboard().catch(e => { console.error(e); return []; }),
     ]).then(([s, lb]) => {
       setStats(s?.data || null);
       if (s?.data) {
@@ -54,7 +54,7 @@ export default function Dashboard() {
       }
       setLeaderboard(lb?.data || []);
     }).finally(() => setLoading(false));
-  }, [user.token]);
+  }, []);
 
   if (loading) return <div className="card"><p>{t('loading')}</p></div>;
   if (!stats) return <div className="card"><p>{t('error')}{error ? `: ${error}` : ''}</p></div>;
@@ -87,14 +87,14 @@ export default function Dashboard() {
 
   async function handleAvatar(avatar) {
     try {
-      await apiUpdateProfile(avatar, stats.theme_color, JSON.stringify(featuredB), user.token);
+      await apiUpdateProfile(avatar, stats.theme_color, JSON.stringify(featuredB));
       setStats(s => ({ ...s, avatar }));
     } catch {}
   }
 
   async function handleTheme(color) {
     try {
-      await apiUpdateProfile(stats.avatar, color, JSON.stringify(featuredB), user.token);
+      await apiUpdateProfile(stats.avatar, color, JSON.stringify(featuredB));
       setStats(s => ({ ...s, theme_color: color }));
     } catch {}
   }
@@ -105,7 +105,7 @@ export default function Dashboard() {
       : [...featuredB, badgeId].slice(0, 3);
     setFeaturedB(newFeatured);
     try {
-      await apiUpdateProfile(stats.avatar, stats.theme_color, JSON.stringify(newFeatured), user.token);
+      await apiUpdateProfile(stats.avatar, stats.theme_color, JSON.stringify(newFeatured));
     } catch {}
   }
 
@@ -217,14 +217,14 @@ export default function Dashboard() {
           })}
         </div>
         <p style={{ marginTop: 12, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Clicca su un badge guadagnato per metterlo in evidenza (max 3).
+          {t('clickBadgeHint')}
         </p>
       </div>
 
       <div className="card">
         <h3>{t('leaderboard')}</h3>
         {leaderboard.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)' }}>Nessun dato.</p>
+          <p style={{ color: 'var(--text-muted)' }}>{t('noData')}</p>
         ) : (
           leaderboard.map((entry, i) => (
             <div key={i} className="leaderboard-row">
@@ -250,7 +250,7 @@ export default function Dashboard() {
             </div>
             {(() => {
               const entry = leaderboard.find(l => l.user_id === selectedProfile);
-              if (!entry) return <p>Utente non trovato.</p>;
+              if (!entry) return <p>{t('userNotFound')}</p>;
               const fb = (() => {
                 try {
                   let v = entry.featured_badges;
@@ -329,7 +329,7 @@ export default function Dashboard() {
                         );
                       })}
                       {fb.length === 0 && (
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Nessun badge in evidenza</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('noFeaturedBadges')}</span>
                       )}
                     </div>
                   </div>

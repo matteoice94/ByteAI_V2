@@ -23,7 +23,7 @@ export default function PathGenerator() {
     setError('');
     setBotMood('thinking');
     try {
-      const res = await apiGenerate(topic, level, name, getLang(), user.token);
+      const res = await apiGenerate(topic, level, name, lang);
       navigate(`/session/${res.session_id}`, { state: { sessionData: res.data, moduleDbIds: res.module_db_ids } });
     } catch (err) {
       setError(err.message);

@@ -433,18 +433,21 @@ def ensure_user_stats(user_id: int) -> dict:
     return dict(row) if row else {}
 
 
-def update_user_stats(user_id: int, updates: dict):
+def update_user_stats(user_id: int, updates: dict, conn=None):
     if not updates:
         return
     set_clause = ", ".join(f"{k} = ?" for k in updates)
     values = list(updates.values()) + [user_id]
-    conn = _get_conn()
+    own_conn = conn is None
+    if own_conn:
+        conn = _get_conn()
     conn.execute(
         _adapt(f"UPDATE user_stats SET {set_clause} WHERE user_id = ?"),
         tuple(values),
     )
-    conn.commit()
-    conn.close()
+    if own_conn:
+        conn.commit()
+        conn.close()
 
 
 def get_user_stats(user_id: int) -> dict:
@@ -593,12 +596,13 @@ def award_user_xp(user_id: int | None, reason: str, topic: str = "", is_first_tr
             topics.append(topic)
             updates["topics_studied"] = json.dumps(topics)
 
-    update_user_stats(user_id, updates)
+    with _get_conn() as conn:
+        update_user_stats(user_id, updates, conn=conn)
 
-    updated_stats = {**stats, **updates}
-    new_badges, all_badges = check_badges(updated_stats)
-    if new_badges:
-        update_user_stats(user_id, {"badges": json.dumps(all_badges)})
+        updated_stats = {**stats, **updates}
+        new_badges, all_badges = check_badges(updated_stats)
+        if new_badges:
+            update_user_stats(user_id, {"badges": json.dumps(all_badges)}, conn=conn)
 
     return xp_gain, new_badges
 

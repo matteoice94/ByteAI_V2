@@ -33,11 +33,11 @@ export default function History() {
   const [viewModule, setViewModule] = useState(null);
   const lang = getLang();
 
-  useEffect(() => { loadSessions(); }, [user.token]);
+  useEffect(() => { loadSessions(); }, []);
 
   async function loadSessions() {
     try {
-      const res = await apiHistory(user.token);
+      const res = await apiHistory();
       setSessions(res.data || []);
     } catch {} finally { setLoading(false); }
   }
@@ -103,7 +103,7 @@ export default function History() {
   async function handleRenameSession(sid) {
     if (!editTitle.trim()) return;
     try {
-      await apiRenameSession(sid, editTitle, user.token);
+      await apiRenameSession(sid, editTitle);
       setSessions(s => s.map(sess => sess.id === sid ? { ...sess, topic: editTitle } : sess));
       setEditing(null);
     } catch {}
@@ -112,7 +112,7 @@ export default function History() {
   async function handleDeleteSession(sid) {
     if (!window.confirm(t('confirmDelete'))) return;
     try {
-      await apiDeleteSession(sid, user.token);
+      await apiDeleteSession(sid);
       setSessions(s => s.filter(sess => sess.id !== sid));
       if (selectedSession === sid) { setSelectedSession(null); setModules([]); }
     } catch {}
@@ -121,7 +121,7 @@ export default function History() {
   async function handleRenameModule(mid) {
     if (!editModuleTitle.trim()) return;
     try {
-      await apiRenameModule(mid, editModuleTitle, user.token);
+      await apiRenameModule(mid, editModuleTitle);
       setModules(ms => ms.map(m => m.id === mid ? { ...m, titolo: editModuleTitle } : m));
       setEditModule(null);
     } catch {}
@@ -130,14 +130,14 @@ export default function History() {
   async function handleDeleteModule(mid) {
     if (!window.confirm(t('confirmDelete'))) return;
     try {
-      await apiDeleteModule(mid, user.token);
+      await apiDeleteModule(mid);
       setModules(ms => ms.filter(m => m.id !== mid));
     } catch {}
   }
 
   async function handleReopenModule(mid, sessionId) {
     try {
-      await apiReopenModule(mid, user.token);
+      await apiReopenModule(mid);
       setModules(ms => ms.map(m => m.id === mid ? { ...m, archived: 0 } : m));
       // Auto-resume to let user work on the reopened module
       const targetSession = sessions.find(s => s.id === sessionId);
