@@ -31,6 +31,7 @@ export default function History() {
   const [editModuleTitle, setEditModuleTitle] = useState('');
   const [riepilogoView, setRiepilogoView] = useState(null);
   const [viewModule, setViewModule] = useState(null);
+  const [error, setError] = useState('');
   const lang = getLang();
 
   useEffect(() => { loadSessions(); }, []);
@@ -39,7 +40,10 @@ export default function History() {
     try {
       const res = await apiHistory();
       setSessions(res.data || []);
-    } catch {} finally { setLoading(false); }
+    } catch (err) {
+      console.error('History load error:', err);
+      setError(err.message);
+    } finally { setLoading(false); }
   }
 
   async function loadDetail(sid) {
