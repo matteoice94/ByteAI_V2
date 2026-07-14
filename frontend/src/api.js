@@ -1,11 +1,23 @@
 const BASE = '/api';
 const TIMEOUT = 30000;
 
+function headers() {
+  const h = { 'Content-Type': 'application/json' };
+  try {
+    const saved = localStorage.getItem('byteai_user');
+    if (saved) {
+      const u = JSON.parse(saved);
+      if (u.token) h['Authorization'] = `Bearer ${u.token}`;
+    }
+  } catch {}
+  return h;
+}
+
 async function request(url, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT);
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
+    const res = await fetch(url, { ...options, signal: controller.signal, credentials: 'include' });
     clearTimeout(timer);
     if (!res.ok) {
       let data;
@@ -23,13 +35,13 @@ async function request(url, options = {}) {
 function post(url, body) {
   return request(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: headers(),
     body: JSON.stringify(body),
   });
 }
 
 function get(url) {
-  return request(url);
+  return request(url, { headers: headers() });
 }
 
 export async function apiRegister(username, password) {

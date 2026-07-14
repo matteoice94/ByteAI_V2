@@ -13,16 +13,16 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (username, password) => {
     const res = await apiLogin(username, password);
-    const u = { username, userId: res.user_id };
-    localStorage.setItem('byteai_user', JSON.stringify(u));
+    const u = { username, userId: res.user_id, token: res.token };
+    try { localStorage.setItem('byteai_user', JSON.stringify(u)); } catch {}
     setUser(u);
     return u;
   }, []);
 
   const register = useCallback(async (username, password) => {
     const res = await apiRegister(username, password);
-    const u = { username, userId: res.user_id };
-    localStorage.setItem('byteai_user', JSON.stringify(u));
+    const u = { username, userId: res.user_id, token: res.token };
+    try { localStorage.setItem('byteai_user', JSON.stringify(u)); } catch {}
     setUser(u);
     return u;
   }, []);
