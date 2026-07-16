@@ -19,9 +19,12 @@ export default function FinalSummary() {
     setError('');
     try {
       const solutions = (modules || []).map(m => ({
-        domanda: m.esercizio_pratico || m.esercizio || '',
-        risposta: m.feedback?.soluzione || '',
-        valutazione: m.feedback?.esito || m.status || 'sbagliata',
+        esercizio: m.esercizio_pratico || m.esercizio || '',
+        soluzione: m.feedback?.soluzione || m.submittedSolution || '',
+        esito: m.feedback?.esito || m.status || 'sbagliata',
+        commento: m.feedback?.commento_costruttivo || '',
+        punti_di_forza: m.feedback?.punti_di_forza || [],
+        da_migliorare: m.feedback?.suggerimento_miglioramento || '',
       }));
       const diary = (modules || [])
         .filter(m => m.status === 'approfondire')

@@ -394,11 +394,13 @@ You must respond EXCLUSIVELY with a valid JSON in the format:
 }}
 
 RULES:
-- The summary must be based on the user's actual answers.
-- Do not include a generic constructive comment.
-- Provide at least one concrete point in `punti_di_forza` and at least one in `punti_da_migliorare`.
-- `diario_di_bordo` must contain a synthesis of the path observations, not a word-for-word repetition.
-- `saluto_conclusivo` must be a motivating, short closing oriented toward continuing learning.
+- Base the summary on the user's actual answers AND the evaluation feedback provided.
+- Look at which modules were "correct", which were "partial" or "wrong", and the feedback comments.
+- Provide SPECIFIC, CONCRETE points in punti_di_forza based on what the user actually did well.
+- Provide ACTIONABLE points in punti_da_migliorare based on actual errors or partial answers.
+- Do NOT use generic phrases like "good job overall" or "keep studying". Be specific.
+- diario_di_bordo must synthesize observations from the path, not repeat data word-for-word.
+- saluto_conclusivo must be motivating and short.
 - Respond ONLY with the requested JSON, without additional text.
 """
     return f"""Genera un riepilogo finale cumulativo in italiano per un percorso di microlearning.
@@ -422,12 +424,14 @@ Devi rispondere ESCLUSIVAMENTE con un JSON valido nel formato:
 }}
 
 REGOLE:
-- Il riepilogo deve essere basato sulle risposte reali fornite dall'utente.
-- Non includere un commento costruttivo generico.
-- Fornisci almeno un punto concreto in `punti_di_forza` e almeno un punto concreto in `punti_da_migliorare`.
-- `diario_di_bordo` deve contenere una sintesi delle osservazioni del percorso, non la ripetizione parola-per-parola dei dati.
-- `saluto_conclusivo` deve essere una chiusura motivante, breve, e orientata al proseguimento dell'apprendimento.
-- Rispondi SOLO con il JSON richiesto, senza testo aggiuntivo.
+- Basa il riepilogo sulle risposte reali dell'utente E sui feedback di valutazione ricevuti.
+- Guarda quali moduli sono risultati "corretta", "parziale" o "sbagliata", e i commenti di feedback.
+- Fornisci punti SPECIFICI e CONCRETI in punti_di_forza basati su cosa l'utente ha fatto bene.
+- Fornisci punti AZIONABILI in punti_da_migliorare basati sugli errori reali.
+- NON usare frasi generiche come "buon lavoro in generale" o "continua a studiare". Sii specifico.
+- diario_di_bordo deve sintetizzare le osservazioni del percorso.
+- saluto_conclusivo deve essere motivante e breve.
+- Rispondi SOLO con il JSON richiesto.
 """
 
 
@@ -729,9 +733,22 @@ def genera_riepilogo_finale(storico_risposte: list[dict], diario_note: list[str]
     for idx, item in enumerate(storico_risposte, start=1):
         esercizio = item.get('esercizio', '').strip()
         soluzione = item.get('soluzione', '').strip()
-        storico_testo.append(
-            f"{idx}. Esercizio: {esercizio}\n   Risposta utente: {soluzione}"
-        )
+        esito = item.get('esito', 'sbagliata')
+        commento = item.get('commento', '')
+        punti = item.get('punti_di_forza', [])
+        da_migliorare = item.get('da_migliorare', '')
+
+        blocchi = [f"{idx}. Esercizio: {esercizio}"]
+        if soluzione:
+            blocchi.append(f"   Risposta: {soluzione}")
+        blocchi.append(f"   Esito: {esito}")
+        if commento:
+            blocchi.append(f"   Feedback: {commento}")
+        if isinstance(punti, list) and punti:
+            blocchi.append(f"   Punti di forza: {', '.join(punti)}")
+        if da_migliorare:
+            blocchi.append(f"   Da migliorare: {da_migliorare}")
+        storico_testo.append("\n".join(blocchi))
     storico_section = "\n".join(storico_testo)
     diario_section = "\n".join([f"- {nota.strip()}" for nota in diario_note if nota.strip()]) if diario_note else "- Nessuna nota aggiuntiva."
 
