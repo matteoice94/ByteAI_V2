@@ -119,3 +119,23 @@ export async function apiRenameModule(moduleId, newTitle) {
 export async function apiDeleteModule(moduleId) {
   return post(`${BASE}/delete-module`, { module_id: moduleId });
 }
+
+export async function apiSocialSearch(query) {
+  return post(`${BASE}/social/search`, { query });
+}
+
+export async function apiSocialSendRequest(friendId) {
+  return post(`${BASE}/social/send-request`, { friend_id: friendId });
+}
+
+export async function apiSocialRespond(friendshipId, action) {
+  return post(`${BASE}/social/respond`, { friendship_id: friendshipId, action });
+}
+
+export async function apiSocialPending() {
+  return get(`${BASE}/social/pending`);
+}
+
+export async function apiSocialFriends() {
+  return get(`${BASE}/social/friends`);
+}

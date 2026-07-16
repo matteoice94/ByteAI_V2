@@ -8,6 +8,7 @@ import ModuleView from './components/ModuleView';
 import FinalSummary from './components/FinalSummary';
 import History from './components/History';
 import Dashboard from './components/Dashboard';
+import Social from './components/Social';
 import NavBar from './components/NavBar';
 import { getLang, setLang, t } from './i18n';
 
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/summary/:sessionId" element={<ErrorBoundary><FinalSummary /></ErrorBoundary>} />
           <Route path="/history" element={<History />} />
           <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+          <Route path="/social" element={<Social />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

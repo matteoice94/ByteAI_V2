@@ -15,6 +15,9 @@ export default function NavBar({ user, lang, onSwitchLang, onLogout }) {
         <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           {t('dashboard')}
         </NavLink>
+        <NavLink to="/social" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          {t('social')}
+        </NavLink>
       </div>
       <div className="navbar-right">
         <button className={`lang-btn ${lang === 'it' ? 'active' : ''}`} onClick={() => onSwitchLang('it')}>IT</button>

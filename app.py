@@ -40,6 +40,12 @@ from src.database import (
     delete_session,
     rename_module,
     delete_module,
+    send_friend_request,
+    accept_friend_request,
+    reject_friend_request,
+    get_pending_requests,
+    get_friends,
+    search_users,
 )
 from src.config import RAG_TOP_K
 from src.i18n import tr
@@ -496,6 +502,84 @@ def api_reopen_module(module_id):
         clear_module_attempts(module_id)
         update_module_state(module_id, completed=False, archived=False)
         return jsonify({'success': True}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+# ── Social / Friends ──────────────────────────────────────
+
+@app.route('/api/social/search', methods=['POST'])
+def api_social_search():
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    data = request.json or {}
+    query = data.get('query', '').strip()
+    if not query or len(query) < 2:
+        return jsonify({'success': True, 'data': []}), 200
+    try:
+        results = search_users(query, payload['user_id'])
+        return jsonify({'success': True, 'data': results}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/social/send-request', methods=['POST'])
+def api_social_send_request():
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    data = request.json or {}
+    friend_id = data.get('friend_id')
+    if not friend_id:
+        return jsonify({'success': False, 'error': 'ID utente richiesto.'}), 400
+    try:
+        ok = send_friend_request(payload['user_id'], int(friend_id))
+        return jsonify({'success': True, 'created': ok}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/social/respond', methods=['POST'])
+def api_social_respond():
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    data = request.json or {}
+    friendship_id = data.get('friendship_id')
+    action = data.get('action', 'reject')
+    if not friendship_id:
+        return jsonify({'success': False, 'error': 'ID richiesta richiesto.'}), 400
+    try:
+        if action == 'accept':
+            ok = accept_friend_request(int(friendship_id), payload['user_id'])
+        else:
+            ok = reject_friend_request(int(friendship_id), payload['user_id'])
+        return jsonify({'success': True, 'ok': ok}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/social/pending', methods=['GET'])
+def api_social_pending():
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    try:
+        requests = get_pending_requests(payload['user_id'])
+        return jsonify({'success': True, 'data': requests}), 200
+    except Exception as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@app.route('/api/social/friends', methods=['GET'])
+def api_social_friends():
+    payload = _require_auth()
+    if not payload:
+        return jsonify({'success': False, 'error': 'Non autorizzato.'}), 401
+    try:
+        friends = get_friends(payload['user_id'])
+        return jsonify({'success': True, 'data': friends}), 200
     except Exception as exc:
         return jsonify({'success': False, 'error': str(exc)}), 500
 

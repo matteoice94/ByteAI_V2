@@ -183,6 +183,15 @@ CREATE TABLE IF NOT EXISTS user_stats (
     theme_color TEXT DEFAULT '#4CAF50',
     featured_badges TEXT DEFAULT '[]'
 );
+
+CREATE TABLE IF NOT EXISTS friendships (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    friend_id INTEGER NOT NULL REFERENCES users(id),
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL,
+    UNIQUE(user_id, friend_id)
+);
 """
 
 SCHEMA_SQLITE = """
@@ -248,6 +257,15 @@ CREATE TABLE IF NOT EXISTS user_stats (
     avatar TEXT DEFAULT '🤖',
     theme_color TEXT DEFAULT '#4CAF50',
     featured_badges TEXT DEFAULT '[]'
+);
+
+CREATE TABLE IF NOT EXISTS friendships (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    friend_id INTEGER NOT NULL REFERENCES users(id),
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL,
+    UNIQUE(user_id, friend_id)
 );
 """
 
@@ -965,3 +983,93 @@ def find_similar_modules(query: str, top_k: int = 5) -> list[dict]:
 
     scored.sort(key=lambda x: x[0], reverse=True)
     return [item for _, item in scored[:top_k] if _ > RAG_SIMILARITY_THRESHOLD]
+
+# -- Friendship / Social ----------------------------------
+
+def send_friend_request(user_id: int, friend_id: int) -> bool:
+    """Send a friend request. Returns True if created, False if already exists."""
+    if user_id == friend_id:
+        return False
+    with _get_conn() as conn:
+        existing = conn.execute(
+            _adapt("SELECT id FROM friendships WHERE user_id = ? AND friend_id = ?"),
+            (user_id, friend_id)
+        ).fetchone()
+        if existing:
+            return False
+        now = datetime.now().isoformat()
+        conn.execute(
+            _adapt("INSERT INTO friendships (user_id, friend_id, status, created_at) VALUES (?, ?, 'pending', ?)"),
+            (user_id, friend_id, now)
+        )
+        return True
+
+def accept_friend_request(friendship_id: int, user_id: int) -> bool:
+    """Accept a friend request. The user must be the friend_id."""
+    with _get_conn() as conn:
+        conn.execute(
+            _adapt("UPDATE friendships SET status = 'accepted' WHERE id = ? AND friend_id = ? AND status = 'pending'"),
+            (friendship_id, user_id)
+        )
+        return conn.cursor().rowcount > 0
+
+def reject_friend_request(friendship_id: int, user_id: int) -> bool:
+    """Reject/delete a friend request."""
+    with _get_conn() as conn:
+        conn.execute(
+            _adapt("DELETE FROM friendships WHERE id = ? AND (user_id = ? OR friend_id = ?)"),
+            (friendship_id, user_id, user_id)
+        )
+        return conn.cursor().rowcount > 0
+
+def get_pending_requests(user_id: int) -> list[dict]:
+    """Get pending friend requests FOR this user."""
+    conn = _get_conn()
+    rows = conn.execute(
+        _adapt("""
+            SELECT f.id, f.user_id, f.created_at, u.username
+            FROM friendships f JOIN users u ON f.user_id = u.id
+            WHERE f.friend_id = ? AND f.status = 'pending'
+            ORDER BY f.created_at DESC
+        """),
+        (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_friends(user_id: int) -> list[dict]:
+    """Get accepted friends."""
+    conn = _get_conn()
+    rows = conn.execute(
+        _adapt("""
+            SELECT DISTINCT u.id, u.username, u.avatar, u.level, u.xp
+            FROM friendships f
+            JOIN users u ON (u.id = f.friend_id OR u.id = f.user_id)
+            WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status = 'accepted' AND u.id != ?
+            ORDER BY u.username
+        """),
+        (user_id, user_id, user_id)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def search_users(query: str, current_user_id: int) -> list[dict]:
+    """Search users by username (exclude self)."""
+    conn = _get_conn()
+    like = f"%{query}%"
+    rows = conn.execute(
+        _adapt("""
+            SELECT u.id, u.username, u.avatar, u.level, u.xp,
+                   (SELECT f.status FROM friendships f
+                    WHERE (f.user_id = u.id AND f.friend_id = ?)
+                       OR (f.friend_id = u.id AND f.user_id = ?)
+                    LIMIT 1) as friendship_status
+            FROM users u
+            WHERE u.username LIKE ? AND u.id != ?
+            LIMIT 20
+        """),
+        (current_user_id, current_user_id, like, current_user_id)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
