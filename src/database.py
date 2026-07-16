@@ -1042,9 +1042,10 @@ def get_friends(user_id: int) -> list[dict]:
     conn = _get_conn()
     rows = conn.execute(
         _adapt("""
-            SELECT DISTINCT u.id, u.username, u.avatar, u.level, u.xp
+            SELECT DISTINCT u.id, u.username, COALESCE(s.avatar, '🤖') as avatar, COALESCE(s.level, 1) as level, COALESCE(s.xp, 0) as xp
             FROM friendships f
             JOIN users u ON (u.id = f.friend_id OR u.id = f.user_id)
+            LEFT JOIN user_stats s ON u.id = s.user_id
             WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status = 'accepted' AND u.id != ?
             ORDER BY u.username
         """),
@@ -1059,12 +1060,13 @@ def search_users(query: str, current_user_id: int) -> list[dict]:
     like = f"%{query}%"
     rows = conn.execute(
         _adapt("""
-            SELECT u.id, u.username, u.avatar, u.level, u.xp,
+            SELECT u.id, u.username, COALESCE(s.avatar, '🤖') as avatar, COALESCE(s.level, 1) as level, COALESCE(s.xp, 0) as xp,
                    (SELECT f.status FROM friendships f
                     WHERE (f.user_id = u.id AND f.friend_id = ?)
                        OR (f.friend_id = u.id AND f.user_id = ?)
                     LIMIT 1) as friendship_status
             FROM users u
+            LEFT JOIN user_stats s ON u.id = s.user_id
             WHERE u.username LIKE ? AND u.id != ?
             LIMIT 20
         """),
